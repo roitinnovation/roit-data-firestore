@@ -1,0 +1,26 @@
+{
+  "name": "roit-base-lib",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --incremental -p tsconfig.build.json",
+    "deploy": "npm run build && npm test && npm publish --access public",
+    "test": "mocha --timeout 15000 -r ts-node/register test/**/*.spec.ts"
+  },
+  "author": "Author",
+  "devDependencies": {
+    "@types/chai": "^4.2.0",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^6.0.46",
+    "typescript": "3.7.4",
+    "ts-node": "^8.3.0",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0"
+  },
+  "dependencies": {
+    
+  },
+  "keywords": [
+  ]
+}

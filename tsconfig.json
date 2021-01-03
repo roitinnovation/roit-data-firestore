@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "declaration": true,
+        "module": "commonjs",
+        "outDir": "dist",
+        "skipLibCheck": true,
+        "strictNullChecks": true,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "noImplicitAny": true,
+        "incremental": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "strictPropertyInitialization": false
+    },
+    "include": [
+        "src/**/*.ts",
+        "test/**/*.ts"
+    ]
+}
