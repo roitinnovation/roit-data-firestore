@@ -13,14 +13,17 @@
     "@types/chai": "^4.2.0",
     "@types/mocha": "^5.2.7",
     "@types/node": "^6.0.46",
-    "typescript": "3.7.4",
-    "ts-node": "^8.3.0",
     "chai": "^4.2.0",
-    "mocha": "^6.2.0"
+    "mocha": "^6.2.0",
+    "ts-node": "^8.3.0",
+    "typescript": "3.7.4"
   },
   "dependencies": {
-    
+    "@google-cloud/firestore": "4.10.1",
+    "@roit/roit-date": "1.5.1",
+    "class-validator": "0.13.1",
+    "reflect-metadata": "0.1.13",
+    "roit-environment": "1.1.1"
   },
-  "keywords": [
-  ]
+  "keywords": []
 }
