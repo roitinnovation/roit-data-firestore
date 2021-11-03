@@ -1,4 +1,3 @@
-import { getMetadataStorage } from 'class-validator';
 import { targetConstructorToSchema } from 'class-validator-jsonschema';
 import { ValidatorDataHandle } from '../exception/handle/ValidatorDataHandle';
 import { QueryPredicate } from "../model/QueryPredicate";
@@ -34,9 +33,12 @@ export class QueryPredicateFunctionTransform {
 
         this.prototypeRegister.set(modelName, options.validateModel.prototype)
 
-        const target = getMetadataStorage()['validationMetadatas'].find((valu: any) => String(valu.target).includes(modelName))
+        // const target = getMetadataStorage()['validationMetadatas'].find((valu: any) => String(valu.target).includes(modelName))
+
+        // console.log(getMetadataStorage()['validationMetadatas'].map((valu: any) => String(valu.target)))
     
-        this.schemaRegister.set(modelName, targetConstructorToSchema(target))
+        const instance = Object.create(options.validateModel)
+        this.schemaRegister.set(modelName, targetConstructorToSchema(instance))
 
         const func = new CreateFunction().createFunction(methodSignature)
 
