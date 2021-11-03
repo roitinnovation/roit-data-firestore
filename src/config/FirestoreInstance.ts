@@ -1,5 +1,6 @@
 import { Firestore } from "@google-cloud/firestore";
 import { Env, Environment } from 'roit-environment';
+import { RepositorySystemException } from "../exception/RepositorySystemException";
 
 export class FirestoreInstance {
 
@@ -13,13 +14,17 @@ export class FirestoreInstance {
 
         const projectId = Environment.getProperty("firestore.projectId")
 
+        if(!projectId) {
+            throw new RepositorySystemException(`ProjectId is required in env.yaml {firestore.projectId}`)
+        }
+
         try {
             this.firestore = new Firestore({
                 projectId
             })
         } catch (err) {
             console.error(err)
-            throw new Error(`Error in initializeApp: ${err}`)
+            throw new RepositorySystemException(`Error in initializeApp: ${err}`)
         }
     }
 

@@ -1,6 +1,6 @@
 import { Query } from "../../src/decorators/Query";
 import { Repository } from "../../src/decorators/Repository";
-import { BaseRepository } from "../../src/model/BaseRepository";
+import { BaseRepository } from "../../src/config/BaseRepository";
 import { User } from "./model/User";
 
 @Repository({

@@ -1,2 +1,12 @@
 import 'reflect-metadata'
-// export { Module } from "./Module"
+
+/**
+ * decorators
+ */
+export { Repository } from "./decorators/Repository"
+export { Query } from "./decorators/Query"
+
+/**
+ * config
+ */
+export { BaseRepository } from "./config/BaseRepository"
