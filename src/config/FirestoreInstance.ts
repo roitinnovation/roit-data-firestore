@@ -1,5 +1,5 @@
 import { Firestore } from "@google-cloud/firestore";
-import { Environment } from 'roit-environment';
+import { Env, Environment } from 'roit-environment';
 
 export class FirestoreInstance {
 
@@ -9,12 +9,14 @@ export class FirestoreInstance {
 
     constructor() {
 
+        if(Environment.acceptedEnv(Env.TEST)) { return }
+
         const projectId = Environment.getProperty("firestore.projectId")
 
         try {
-          this.firestore = new Firestore({
-              projectId
-          })
+            this.firestore = new Firestore({
+                projectId
+            })
         } catch (err) {
             console.error(err)
             throw new Error(`Error in initializeApp: ${err}`)

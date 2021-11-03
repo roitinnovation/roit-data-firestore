@@ -1,10 +1,7 @@
-import { Firestore } from "@google-cloud/firestore"
-
+import { Firestore } from "@google-cloud/firestore";
+import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
+import { RepositoryBusinessException } from "../../exception/RepositoryBusinessException";
 export class CreateFunction {
-
-    constructor() {
-        (global as any).dateRef = require('@roit/roit-date')
-    }
 
     createFunction(methodSignature: string): Function | null {
         
@@ -19,13 +16,20 @@ export class CreateFunction {
 
     async create(item: any): Promise<any> {
 
-        const db: Firestore = (global as any).globalDbFile.FirestoreInstance.getInstance()
-        const { newDate } = (global as any).dateRef
+        let modelName = ''
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const { newDate } = (global as any).instances.dateRef
+        const uuid = (global as any).instances.uuid
 
         const collection = db.collection('<COLLECTION_RAPLACE>')
 
+        const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
+
+        await validatorDataHandle.validateModel(modelName, item)
+
         if(!item.id) {
-            item.id = this.generateUniqueId();
+            item.id = uuid();
         }
 
         item.createAt = newDate()
@@ -34,6 +38,8 @@ export class CreateFunction {
         item.updateAt = newDate()
         item.updateTimestampAt = new Date(item.updateAt).getTime()
 
+        item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+        
         await collection.doc(item.id).set(JSON.parse(JSON.stringify(item)))
 
         return item
@@ -41,17 +47,25 @@ export class CreateFunction {
 
     async update(item: any): Promise<any> {
 
-        const db: Firestore = (global as any).globalDbFile.FirestoreInstance.getInstance()
-        const { newDate } = (global as any).dateRef
+        let modelName = ''
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const { newDate } = (global as any).instances.dateRef
 
         const collection = db.collection('<COLLECTION_RAPLACE>')
 
+        const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
+
+        await validatorDataHandle.validateModel(modelName, item)
+
         if(!item.id) {
-            throw new Error(`Id is required`)
+            throw new RepositoryBusinessException(`Id is required`, [])
         }
 
         item.updateAt = newDate()
         item.updateTimestampAt = new Date(item.updateAt).getTime()
+
+        item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
 
         await collection.doc(item.id).update(JSON.parse(JSON.stringify(item)))
 
@@ -60,7 +74,11 @@ export class CreateFunction {
 
     async delete(id: string): Promise<string> {
 
-        const db: Firestore = (global as any).globalDbFile.FirestoreInstance.getInstance()
+        if(!id) {
+            throw new RepositoryBusinessException(`Id is required`, [])
+        }
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
 
         const collection = db.collection('<COLLECTION_RAPLACE>')
 
@@ -69,9 +87,9 @@ export class CreateFunction {
         return id
     }
 
-    async findAll(): Promise<Array<any>> {
+    async findAll(): Promise<any[]> {
 
-        const db: Firestore = (global as any).globalDbFile.FirestoreInstance.getInstance()
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
 
         const collection = db.collection('<COLLECTION_RAPLACE>')
 
@@ -84,23 +102,17 @@ export class CreateFunction {
             items.push({ ...data })
         })
 
-        console.log('items', items)
-
         return items
     }
 
     async findById(id: string): Promise<any> {
 
-        const db: Firestore = (global as any).globalDbFile.FirestoreInstance.getInstance()
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
 
         const collection = db.collection('<COLLECTION_RAPLACE>')
 
         const response = await collection.doc(id).get()
 
         return response.data()
-    }
-
-    private generateUniqueId() {
-        return `${new Date().getTime()}.${Math.random().toString(36)}`.toUpperCase()
     }
 }

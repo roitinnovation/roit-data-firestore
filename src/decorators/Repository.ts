@@ -22,7 +22,6 @@ export function Repository(options: RepositoryOptions) {
         }
 
         methods.forEach(propertyKey => {
-            console.log(`register propertyKey ${propertyKey}`)
             const queryOperator = TransformMethodFromQuery.extractQuery(propertyKey)
             constructor.prototype[propertyKey] = QueryPredicateFunctionTransform.createFunction(queryOperator, propertyKey, options)
         })

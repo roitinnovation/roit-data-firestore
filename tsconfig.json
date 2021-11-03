@@ -14,7 +14,7 @@
         "incremental": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
     },
     "include": [
         "src/**/*.ts",

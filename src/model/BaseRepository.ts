@@ -1,6 +1,4 @@
 import { Query } from "../decorators/Query";
-
-
 export abstract class BaseRepository<T> {
 
     @Query()
@@ -13,7 +11,7 @@ export abstract class BaseRepository<T> {
     delete: (id: string) => Promise<void>
 
     @Query()
-    findAll: () => Promise<Array<T>>
+    findAll: () => Promise<T[]>
 
     @Query()
     findById: (id: string) => Promise<T> | undefined

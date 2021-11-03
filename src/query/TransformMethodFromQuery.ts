@@ -17,9 +17,11 @@ export class TransformMethodFromQuery {
             const opertorMaxLength = Math.max(...operators.map(opt => opt.length))
             const operator = operators.find(opt => opt.length == opertorMaxLength) || 'Iqual'
 
+            const operatorConfig = operatorMap.get(operator)
+
             const predicate = new QueryPredicate
-            predicate.attribute = this.lowerCamelCase(part.replace(operator, ''))
-            predicate.operator = operatorMap.get(operator)
+            predicate.attribute = this.lowerCamelCase(operatorConfig?.extractOperator ? operatorConfig?.extractOperator(part) : part.replace(operator, ''))
+            predicate.operator = operatorConfig?.predicate(part)
             predicate.operatorKey = operator
 
             return predicate

@@ -4,12 +4,17 @@ import { BaseRepository } from "../../src/model/BaseRepository";
 import { User } from "./model/User";
 
 @Repository({
-    collection: 'fb-data-test'
+    collection: 'fb-data-test',
+    validateModel: User
 })
 export class Repository1 extends BaseRepository<User> {
     
     @Query()
-    findByName: (name: string) => Promise<string>
+    findByName: (name: string) => Promise<Array<User>>
 
-    
+    @Query()
+    findByNameAndAge: (name: string, age: number) => Promise<Array<User>>
+
+    @Query()
+    findByNameAndAgeAndOrderByIdDesc: (name: string, age: number) => Promise<Array<User>>
 }
