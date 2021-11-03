@@ -5,7 +5,7 @@
   "types": "src/index.ts",
   "scripts": {
     "build": "tsc --incremental -p tsconfig.build.json",
-    "deploy": "npm run build && npm test && npm publish --access public",
+    "deploy": "npm run build && npm test && npm publish --access public --scope=roit",
     "test": "jest --passWithNoTests"
   },
   "author": "Author",
