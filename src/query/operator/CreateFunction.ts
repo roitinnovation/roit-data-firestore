@@ -1,6 +1,8 @@
 import { Firestore } from "@google-cloud/firestore";
 import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
 import { RepositoryBusinessException } from "../../exception/RepositoryBusinessException";
+import { Paging } from "../../model/Paging";
+import { QueryCreatorConfig } from "../QueryCreatorConfig";
 export class CreateFunction {
 
     createFunction(methodSignature: string): Function | null {
@@ -87,13 +89,15 @@ export class CreateFunction {
         return id
     }
 
-    async findAll(): Promise<any[]> {
+    async findAll(paging?: Paging): Promise<any[]> {
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const queryCreatorConfig: QueryCreatorConfig = (global as any).instances.queryCreatorConfig
 
         const collection = db.collection('<COLLECTION_RAPLACE>')
 
-        const snapshot = await collection.get()
+        let documentRef = queryCreatorConfig.buildPaging(collection, paging)
+        const snapshot = await documentRef.get()
 
         let items: Array<any> = new Array
 

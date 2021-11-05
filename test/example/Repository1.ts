@@ -2,6 +2,7 @@ import { Query } from "../../src/decorators/Query";
 import { Repository } from "../../src/decorators/Repository";
 import { BaseRepository } from "../../src/config/BaseRepository";
 import { User } from "./model/User";
+import { Paging } from "../../src/model/Paging";
 
 @Repository({
     collection: 'fb-data-test',
@@ -13,7 +14,7 @@ export class Repository1 extends BaseRepository<User> {
     findByName: (name: string) => Promise<Array<User>>
 
     @Query()
-    findByNameAndAge: (name: string, age: number) => Promise<Array<User>>
+    findByNameAndAge: (name: string, age: number, paging?: Paging) => Promise<Array<User>>
 
     @Query()
     findByNameAndAgeAndOrderByIdDesc: (name: string, age: number) => Promise<Array<User>>

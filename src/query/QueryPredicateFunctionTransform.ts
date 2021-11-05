@@ -3,6 +3,7 @@ import { ValidatorDataHandle } from '../exception/handle/ValidatorDataHandle';
 import { QueryPredicate } from "../model/QueryPredicate";
 import { RepositoryOptions } from "../model/RepositoryOptions";
 import { CreateFunction } from "./operator/CreateFunction";
+import { QueryCreatorConfig } from './QueryCreatorConfig';
 const firestore = require('../config/FirestoreInstance')
 const dateRef = require('@roit/roit-date')
 const classValidator = require('class-validator')
@@ -23,6 +24,7 @@ export class QueryPredicateFunctionTransform {
             validatorDataHandle: new ValidatorDataHandle,
             uuid: uuid.v4,
             Environment,
+            queryCreatorConfig: new QueryCreatorConfig
         } 
 
         if(!options?.collection) {
@@ -53,14 +55,16 @@ export class QueryPredicateFunctionTransform {
             return Function(`return ${functionString}`)()
         }
         
-        const parameters = queryPredicate.filter(query => query.operator?.includes('.where'))
+        let parameters = queryPredicate.filter(query => query.operator?.includes('.where'))
+        parameters = parameters.concat({ attribute: 'paging' } as any)
 
         let functionBuilder = `async function(${parameters.map(att => att.attribute).join(',')}){\n`
-        functionBuilder += `if(${parameters.map(att => `!${att.attribute}`).join('||')}) throw new Error('All parameters required, ref..: ${parameters.map(att => att.attribute).join(',')}')\n`
+        functionBuilder += `if(${parameters.filter(par => par.attribute != 'paging').map(att => `!${att.attribute}`).join('||')}) throw new Error('All parameters required, ref..: ${parameters.map(att => att.attribute).join(',')}')\n`
         functionBuilder += ` const db = global.instances.globalDbFile.FirestoreInstance.getInstance()\n`
-        functionBuilder += `const colletion = db.collection('${options.collection}')\n`
+        functionBuilder += `const collection = db.collection('${options.collection}')\n`
         functionBuilder += `if(Number(global.instances.Environment.getProperty('firestore.debug'))) { console.debug('[DEBUG] Executing query >', "${queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', att.attribute)}`).join('')}") }\n`
-        functionBuilder += `const snapshot = await colletion${queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', att.attribute)}`).join('')}.get()\n`
+        functionBuilder += `const documentRef = global.instances.queryCreatorConfig.buildPaging(collection, paging)\n`
+        functionBuilder += `const snapshot = await documentRef${queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', att.attribute)}`).join('')}.get()\n`
         functionBuilder += `let items = []\n`
         functionBuilder += `snapshot.forEach(doc => { 
             let element = { ...doc.data() }
