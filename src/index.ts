@@ -10,3 +10,4 @@ export { Query } from "./decorators/Query"
  * config
  */
 export { BaseRepository } from "./config/BaseRepository"
+export { ReadonlyRepository } from "./config/ReadonlyRepository"
