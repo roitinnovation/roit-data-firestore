@@ -12,9 +12,9 @@ describe('TesteExample tests', () => {
 
     const resultCreate = await result.create({ id: '1', name: 'asa', age: 41 })
 
-    expect(resultCreate.id).toBe("1")
-    expect(resultCreate.name).toBe("asa")
-    expect(resultCreate.age).toBe(41)
+    expect(resultCreate[0].id).toBe("1")
+    expect(resultCreate[0].name).toBe("asa")
+    expect(resultCreate[0].age).toBe(41)
 
   });
 
@@ -24,9 +24,9 @@ describe('TesteExample tests', () => {
 
     const resultCreate = await result.update({ id: '1', name: 'Frango', age: 42 })
 
-    expect(resultCreate.id).toBe("1")
-    expect(resultCreate.name).toBe("Frango")
-    expect(resultCreate.age).toBe(42)
+    expect(resultCreate[0].id).toBe("1")
+    expect(resultCreate[0].name).toBe("Frango")
+    expect(resultCreate[0].age).toBe(42)
 
   });
 
@@ -105,7 +105,7 @@ describe('TesteExample tests', () => {
 
     const resultDelete = await result.delete('1')
 
-    expect(resultDelete).toBe('1')
+    expect(resultDelete[0]).toBe('1')
 
   });
 

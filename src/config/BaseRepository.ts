@@ -9,11 +9,11 @@ export abstract class BaseRepository<T> {
     findById: (id: string) => Promise<T> | undefined
 
     @Query()
-    create: (item: T) => Promise<T>
+    create: (item: T) => Promise<Array<T>>
 
     @Query()
-    update: (item: T) => Promise<T>
+    update: (item: T) => Promise<Array<T>>
 
     @Query()
-    delete: (id: Required<string>) => Promise<void>
+    delete: (id: Required<string>) => Promise<Array<string>>
 }

@@ -16,9 +16,17 @@ export class CreateFunction {
         return null
     }
 
-    async create(item: any): Promise<any> {
+    async create(items: any | Array<any>): Promise<Array<any>> {
 
         let modelName = ''
+
+        if(!Array.isArray(items)) {
+            items = [ items ]
+        }
+
+        if(items.length > 500) {
+            throw new RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, [])
+        }
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const { newDate } = (global as any).instances.dateRef
@@ -28,28 +36,44 @@ export class CreateFunction {
 
         const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
 
-        await validatorDataHandle.validateModel(modelName, item)
+        const batch = db.batch()
 
-        if(!item.id) {
-            item.id = uuid();
+        for(const item of items) {
+            await validatorDataHandle.validateModel(modelName, item)
+
+            if(!item.id) {
+                item.id = uuid();
+            }
+    
+            item.createAt = newDate()
+            item.createTimestampAt = new Date(item.createAt).getTime()
+    
+            item.updateAt = newDate()
+            item.updateTimestampAt = new Date(item.updateAt).getTime()
+    
+            item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+            
+            const docRef = collection.doc(item.id)
+
+            batch.set(docRef, JSON.parse(JSON.stringify(item)))
         }
 
-        item.createAt = newDate()
-        item.createTimestampAt = new Date(item.createAt).getTime()
+        await batch.commit()
 
-        item.updateAt = newDate()
-        item.updateTimestampAt = new Date(item.updateAt).getTime()
-
-        item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
-        
-        await collection.doc(item.id).set(JSON.parse(JSON.stringify(item)))
-
-        return item
+        return items
     }
 
-    async update(item: any): Promise<any> {
+    async update(items: any | Array<any>): Promise<any> {
 
         let modelName = ''
+
+        if(!Array.isArray(items)) {
+            items = [ items ]
+        }
+
+        if(items.length > 500) {
+            throw new RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, [])
+        }
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const { newDate } = (global as any).instances.dateRef
@@ -58,35 +82,59 @@ export class CreateFunction {
 
         const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
 
-        await validatorDataHandle.validateModel(modelName, item)
+        const batch = db.batch()
 
-        if(!item.id) {
+        for(const item of items) {
+
+            await validatorDataHandle.validateModel(modelName, item)
+
+            if(!item.id) {
+                throw new RepositoryBusinessException(`Id is required`, [])
+            }
+
+            item.updateAt = newDate()
+            item.updateTimestampAt = new Date(item.updateAt).getTime()
+
+            item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+
+            const docRef = collection.doc(item.id)
+
+            batch.update(docRef, JSON.parse(JSON.stringify(item)))
+        }
+
+        await batch.commit()
+
+        return items
+    }
+
+    async delete(ids: string | Array<string>): Promise<Array<string>> {
+
+        if(!ids) {
             throw new RepositoryBusinessException(`Id is required`, [])
         }
 
-        item.updateAt = newDate()
-        item.updateTimestampAt = new Date(item.updateAt).getTime()
+        if(!Array.isArray(ids)) {
+            ids = [ ids ]
+        }
 
-        item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
-
-        await collection.doc(item.id).update(JSON.parse(JSON.stringify(item)))
-
-        return item
-    }
-
-    async delete(id: string): Promise<string> {
-
-        if(!id) {
-            throw new RepositoryBusinessException(`Id is required`, [])
+        if(ids.length > 500) {
+            throw new RepositoryBusinessException(`To perform the delete, the maximum number of elements is 500, size current: ${ids.length}`, [])
         }
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
 
+        const batch = db.batch()
+
         const collection = db.collection('<COLLECTION_RAPLACE>')
 
-        await collection.doc(id).delete()
+        ids.forEach(id => {
+            const docRef = collection.doc(id)
+            batch.delete(docRef)
+        })
 
-        return id
+        await batch.commit()
+
+        return ids
     }
 
     async findAll(paging?: Paging): Promise<any[]> {
