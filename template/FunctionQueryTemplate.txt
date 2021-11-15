@@ -1,0 +1,15 @@
+ async function(<params_replace>) {
+        if(<params_validator_replace>) throw new Error('All parameters required, ref..: <params_replace>')
+        const db = global.instances.globalDbFile.FirestoreInstance.getInstance()
+        const collection = db.collection('<collection_name_replace>')
+        if(Number(global.instances.Environment.getProperty('firestore.debug'))) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
+        const documentRef = global.instances.queryCreatorConfig.buildPaging(collection, paging)
+        const snapshot = await documentRef<query_predicate_replace>.get()
+        let items = []
+        snapshot.forEach(doc => { 
+            let element = { ...doc.data() }
+            element.id = doc.id
+            items.push(element)
+         })
+    return items
+}

@@ -2,6 +2,7 @@ import { targetConstructorToSchema } from 'class-validator-jsonschema';
 import { ValidatorDataHandle } from '../exception/handle/ValidatorDataHandle';
 import { QueryPredicate } from "../model/QueryPredicate";
 import { RepositoryOptions } from "../model/RepositoryOptions";
+import { TemplateLoading } from '../util/TemplateLoading';
 import { CreateFunction } from "./operator/CreateFunction";
 import { QueryCreatorConfig } from './QueryCreatorConfig';
 const firestore = require('../config/FirestoreInstance')
@@ -58,21 +59,12 @@ export class QueryPredicateFunctionTransform {
         let parameters = queryPredicate.filter(query => query.operator?.includes('.where'))
         parameters = parameters.concat({ attribute: 'paging' } as any)
 
-        let functionBuilder = `async function(${parameters.map(att => att.attribute).join(',')}){\n`
-        functionBuilder += `if(${parameters.filter(par => par.attribute != 'paging').map(att => `!${att.attribute}`).join('||')}) throw new Error('All parameters required, ref..: ${parameters.map(att => att.attribute).join(',')}')\n`
-        functionBuilder += ` const db = global.instances.globalDbFile.FirestoreInstance.getInstance()\n`
-        functionBuilder += `const collection = db.collection('${options.collection}')\n`
-        functionBuilder += `if(Number(global.instances.Environment.getProperty('firestore.debug'))) { console.debug('[DEBUG] Executing query >', "${queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', att.attribute)}`).join('')}") }\n`
-        functionBuilder += `const documentRef = global.instances.queryCreatorConfig.buildPaging(collection, paging)\n`
-        functionBuilder += `const snapshot = await documentRef${queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', att.attribute)}`).join('')}.get()\n`
-        functionBuilder += `let items = []\n`
-        functionBuilder += `snapshot.forEach(doc => { 
-            let element = { ...doc.data() }
-            element.id = doc.id
-            items.push(element)
-         })\n`
-        functionBuilder +=  ` return items\n`
-        functionBuilder += '}'
+        let functionBuilder = TemplateLoading.read('FunctionQueryTemplate.txt')
+
+        functionBuilder = functionBuilder.replace(/<params_replace>/g, parameters.map(att => att.attribute).join(','))
+        functionBuilder = functionBuilder.replace(/<params_validator_replace>/g, parameters.filter(par => par.attribute != 'paging').map(att => `!${att.attribute}`).join('||'))
+        functionBuilder = functionBuilder.replace(/<collection_name_replace>/g, options.collection)
+        functionBuilder = functionBuilder.replace(/<query_predicate_replace>/g, queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', att.attribute)}`).join(''))
 
         return Function(`return ${functionBuilder}`)()
     }
