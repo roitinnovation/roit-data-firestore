@@ -1,4 +1,5 @@
 import { Firestore } from "@google-cloud/firestore";
+import { CacheResolver } from "../../cache/CacheResolver";
 import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
 import { RepositoryBusinessException } from "../../exception/RepositoryBusinessException";
 import { Paging } from "../../model/Paging";
@@ -139,7 +140,18 @@ export class CreateFunction {
 
     async findAll(paging?: Paging): Promise<any[]> {
 
+        let repositoryClassName = ''
+        let methodSignature = ''
+
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
+
+        const result = cacheResolver.getCacheResult(repositoryClassName, methodSignature, 'Any')
+        
+        if(result) {
+            return result
+        }
+
         const queryCreatorConfig: QueryCreatorConfig = (global as any).instances.queryCreatorConfig
 
         const collection = db.collection('<COLLECTION_RAPLACE>')
@@ -154,17 +166,33 @@ export class CreateFunction {
             items.push({ ...data })
         })
 
+        cacheResolver.cacheResult(repositoryClassName, methodSignature, items, 'Any')
+
         return items
     }
 
     async findById(id: string): Promise<any> {
 
+        let repositoryClassName = ''
+        let methodSignature = ''
+
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
+
+        const result = cacheResolver.getCacheResult(repositoryClassName, methodSignature, id)
+        
+        if(result) {
+            return result
+        }
 
         const collection = db.collection('<COLLECTION_RAPLACE>')
 
         const response = await collection.doc(id).get()
 
-        return response.data()
+        const item = response.data()
+
+        cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id)
+
+        return item
     }
 }

@@ -3,10 +3,16 @@ import { Repository } from "../../src/decorators/Repository";
 import { BaseRepository } from "../../src/config/BaseRepository";
 import { User } from "./model/User";
 import { Paging } from "../../src/model/Paging";
+import { Cacheable } from "../../src/decorators/Cacheable";
 
 @Repository({
     collection: 'fb-data-test',
     validateModel: User
+})
+@Cacheable({
+    excludesMethods: [
+        'findById'
+    ],
 })
 export class Repository1 extends BaseRepository<User> {
     

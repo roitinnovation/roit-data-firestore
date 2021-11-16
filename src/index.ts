@@ -5,6 +5,7 @@ import 'reflect-metadata'
  */
 export { Repository } from "./decorators/Repository"
 export { Query } from "./decorators/Query"
+export { Cacheable } from "./decorators/Cacheable"
 
 /**
  * config

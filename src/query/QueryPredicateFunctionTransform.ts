@@ -1,4 +1,5 @@
 import { targetConstructorToSchema } from 'class-validator-jsonschema';
+import { CacheResolver } from '../cache/CacheResolver';
 import { ValidatorDataHandle } from '../exception/handle/ValidatorDataHandle';
 import { QueryPredicate } from "../model/QueryPredicate";
 import { RepositoryOptions } from "../model/RepositoryOptions";
@@ -16,7 +17,7 @@ export class QueryPredicateFunctionTransform {
     public static prototypeRegister: Map<string, Object> = new Map
     public static schemaRegister: Map<string, any> = new Map
 
-    static createFunction(queryPredicate: Array<QueryPredicate>, methodSignature: string, options: RepositoryOptions): Function {
+    static createFunction(queryPredicate: Array<QueryPredicate>, methodSignature: string, repositoryClassName: string, options: RepositoryOptions): Function {
 
         (global as any).instances = {
             globalDbFile: firestore,
@@ -25,7 +26,8 @@ export class QueryPredicateFunctionTransform {
             validatorDataHandle: new ValidatorDataHandle,
             uuid: uuid.v4,
             Environment,
-            queryCreatorConfig: new QueryCreatorConfig
+            queryCreatorConfig: new QueryCreatorConfig,
+            cacheResolver: CacheResolver.getInstance()
         } 
 
         if(!options?.collection) {
@@ -52,6 +54,8 @@ export class QueryPredicateFunctionTransform {
                 .replace(/yield/g, 'await')
                 .replace('<COLLECTION_RAPLACE>', options.collection)
                 .replace("let modelName = ''", `let modelName = '${modelName}'`)
+                .replace("let repositoryClassName = ''", `let repositoryClassName = '${repositoryClassName}'`)
+                .replace("let methodSignature = ''", `let methodSignature = '${methodSignature}'`)
             functionString = this.removeLast(functionString, '});')
             return Function(`return ${functionString}`)()
         }
@@ -61,6 +65,8 @@ export class QueryPredicateFunctionTransform {
 
         let functionBuilder = TemplateLoading.read('FunctionQueryTemplate.txt')
 
+        functionBuilder = functionBuilder.replace(/<repositoryClassName_value>/g, repositoryClassName)
+        functionBuilder = functionBuilder.replace(/<methodSignature_value>/g, methodSignature)
         functionBuilder = functionBuilder.replace(/<params_replace>/g, parameters.map(att => att.attribute).join(','))
         functionBuilder = functionBuilder.replace(/<params_validator_replace>/g, parameters.filter(par => par.attribute != 'paging').map(att => `!${att.attribute}`).join('||'))
         functionBuilder = functionBuilder.replace(/<collection_name_replace>/g, options.collection)

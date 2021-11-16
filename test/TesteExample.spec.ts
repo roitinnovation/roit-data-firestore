@@ -78,6 +78,13 @@ describe('TesteExample tests', () => {
     expect(resultFind[0]?.id).toBe("1")
     expect(resultFind[0]?.name).toBe("Frango")
 
+    const resultFind2 = await result.findByName('Frango')
+
+    expect(resultFind2?.length).toBe(1)
+    expect(resultFind2[0]?.age).toBe(42)
+    expect(resultFind2[0]?.id).toBe("1")
+    expect(resultFind2[0]?.name).toBe("Frango")
+
     const resultFindAny = await result.findByName('AnyFrango')
 
     expect(resultFindAny?.length).toBe(0)
