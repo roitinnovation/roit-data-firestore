@@ -108,6 +108,55 @@ export class CreateFunction {
         return items
     }
 
+    async createOrUpdate(items: any | Array<any>): Promise<Array<any>> {
+
+        let modelName = ''
+
+        if(!Array.isArray(items)) {
+            items = [ items ]
+        }
+
+        if(items.length > 500) {
+            throw new RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, [])
+        }
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const { newDate } = (global as any).instances.dateRef
+        const uuid = (global as any).instances.uuid
+
+        const collection = db.collection('<COLLECTION_RAPLACE>')
+
+        const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
+
+        const batch = db.batch()
+
+        for(const item of items) {
+            await validatorDataHandle.validateModel(modelName, item)
+
+            if(!item.id) {
+                item.id = uuid();
+            }
+    
+            if(!item.createAt) {
+                item.createAt = newDate()
+                item.createTimestampAt = new Date(item.createAt).getTime()
+            }
+    
+            item.updateAt = newDate()
+            item.updateTimestampAt = new Date(item.updateAt).getTime()
+    
+            item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+            
+            const docRef = collection.doc(item.id)
+
+            batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true })
+        }
+
+        await batch.commit()
+
+        return items
+    }
+
     async delete(ids: string | Array<string>): Promise<Array<string>> {
 
         if(!ids) {
