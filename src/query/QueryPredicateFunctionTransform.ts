@@ -3,7 +3,6 @@ import { CacheResolver } from '../cache/CacheResolver';
 import { ValidatorDataHandle } from '../exception/handle/ValidatorDataHandle';
 import { QueryPredicate } from "../model/QueryPredicate";
 import { RepositoryOptions } from "../model/RepositoryOptions";
-import { TemplateLoading } from '../util/TemplateLoading';
 import { CreateFunction } from "./operator/CreateFunction";
 import { QueryCreatorConfig } from './QueryCreatorConfig';
 const firestore = require('../config/FirestoreInstance')
@@ -11,6 +10,10 @@ const dateRef = require('@roit/roit-date')
 const classValidator = require('class-validator')
 const uuid = require("uuid");
 const { Environment } = require('roit-environment')
+const fs = require('fs')
+const path = require('path')
+
+const templateFun = fs.readFileSync(path.resolve(__dirname, '../../template/FunctionQueryTemplate.txt'), 'utf8')
 
 export class QueryPredicateFunctionTransform {
 
@@ -63,7 +66,7 @@ export class QueryPredicateFunctionTransform {
         let parameters = queryPredicate.filter(query => query.operator?.includes('.where'))
         parameters = parameters.concat({ attribute: 'paging' } as any)
 
-        let functionBuilder = TemplateLoading.read('FunctionQueryTemplate.txt')
+        let functionBuilder = templateFun
 
         functionBuilder = functionBuilder.replace(/<repositoryClassName_value>/g, repositoryClassName)
         functionBuilder = functionBuilder.replace(/<methodSignature_value>/g, methodSignature)
