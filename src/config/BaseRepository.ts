@@ -6,7 +6,7 @@ export abstract class BaseRepository<T> {
     findAll: (paging?: Paging) => Promise<T[]>
 
     @Query()
-    findById: (id: string) => Promise<T> | undefined
+    findById: (id: string) => Promise<T | undefined> 
 
     @Query()
     create: (item: T | Array<T>) => Promise<Array<T>>
