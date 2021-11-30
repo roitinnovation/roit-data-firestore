@@ -3,6 +3,7 @@ import { CacheResolver } from "../../cache/CacheResolver";
 import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
 import { RepositoryBusinessException } from "../../exception/RepositoryBusinessException";
 import { Paging } from "../../model/Paging";
+import { EnvironmentUtil } from "../../util/EnvironmentUtil";
 import { QueryCreatorConfig } from "../QueryCreatorConfig";
 export class CreateFunction {
 
@@ -33,6 +34,7 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const { newDate } = (global as any).instances.dateRef
         const uuid = (global as any).instances.uuid
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
 
         const collection = db.collection('<COLLECTION_REPLACE>')
 
@@ -60,7 +62,11 @@ export class CreateFunction {
             batch.set(docRef, JSON.parse(JSON.stringify(item)))
         }
 
-        await batch.commit()
+        if(!environmentUtil.areWeTesting()) { 
+            await batch.commit()
+        } else {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+        }
 
         return items
     }
@@ -73,16 +79,21 @@ export class CreateFunction {
         const lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
         const updateAt = newDate()
         const updateTimestampAt = new Date(updateAt).getTime()
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
 
         const document = db.collection('<COLLECTION_REPLACE>').doc(id)
 
         try {
-            await document.update({ 
-                lastServiceModify,
-                updateAt,
-                updateTimestampAt,
-                ...item
-            });
+            if(!environmentUtil.areWeTesting()) { 
+                await document.update({ 
+                    lastServiceModify,
+                    updateAt,
+                    updateTimestampAt,
+                    ...item
+                });
+            } else {
+                console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            }
         } catch(e) {
             console.error(e?.details)
         }
@@ -103,6 +114,7 @@ export class CreateFunction {
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const { newDate } = (global as any).instances.dateRef
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
 
         const collection = db.collection('<COLLECTION_REPLACE>')
 
@@ -128,7 +140,11 @@ export class CreateFunction {
             batch.update(docRef, JSON.parse(JSON.stringify(item)))
         }
 
-        await batch.commit()
+        if(!environmentUtil.areWeTesting()) { 
+            await batch.commit()
+        } else {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+        }
 
         return items
     }
@@ -149,6 +165,7 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const { newDate } = (global as any).instances.dateRef
         const uuid = (global as any).instances.uuid
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
 
         const collection = db.collection('<COLLECTION_REPLACE>')
 
@@ -178,7 +195,11 @@ export class CreateFunction {
             batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true })
         }
 
-        await batch.commit()
+        if(!environmentUtil.areWeTesting()) { 
+            await batch.commit()
+        } else {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+        }
 
         return items
     }
@@ -198,6 +219,7 @@ export class CreateFunction {
         }
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
 
         const batch = db.batch()
 
@@ -208,7 +230,11 @@ export class CreateFunction {
             batch.delete(docRef)
         })
 
-        await batch.commit()
+        if(!environmentUtil.areWeTesting()) { 
+            await batch.commit()
+        } else {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+        }
 
         return ids
     }
@@ -230,6 +256,12 @@ export class CreateFunction {
         const queryCreatorConfig: QueryCreatorConfig = (global as any).instances.queryCreatorConfig
 
         const collection = db.collection('<COLLECTION_REPLACE>')
+
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        if(environmentUtil.areWeTesting()) { 
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            return []
+        }
 
         let documentRef = queryCreatorConfig.buildPaging(collection, paging)
         const snapshot = await documentRef.get()
@@ -261,6 +293,12 @@ export class CreateFunction {
         }
 
         const collection = db.collection('<COLLECTION_REPLACE>')
+
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        if(environmentUtil.areWeTesting()) { 
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            return undefined
+        }
 
         const response = await collection.doc(id).get()
 

@@ -3,6 +3,7 @@ import { CacheResolver } from '../cache/CacheResolver';
 import { ValidatorDataHandle } from '../exception/handle/ValidatorDataHandle';
 import { QueryPredicate } from "../model/QueryPredicate";
 import { RepositoryOptions } from "../model/RepositoryOptions";
+import { EnvironmentUtil } from '../util/EnvironmentUtil';
 import { CreateFunction } from "./operator/CreateFunction";
 import { QueryCreatorConfig } from './QueryCreatorConfig';
 const firestore = require('../config/FirestoreInstance')
@@ -30,7 +31,8 @@ export class QueryPredicateFunctionTransform {
             uuid: uuid.v4,
             Environment,
             queryCreatorConfig: new QueryCreatorConfig,
-            cacheResolver: CacheResolver.getInstance()
+            cacheResolver: CacheResolver.getInstance(),
+            environmentUtil: new EnvironmentUtil
         } 
 
         if(!options?.collection) {

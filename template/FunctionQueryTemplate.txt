@@ -6,6 +6,12 @@
 
         const db = global.instances.globalDbFile.FirestoreInstance.getInstance()
         const cacheResolver = global.instances.cacheResolver
+
+        const environmentUtil = global.instances.environmentUtil
+        if(environmentUtil.areWeTesting()) { 
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            return []
+        }
         
         const result = cacheResolver.getCacheResult(repositoryClassName, methodSignature, <params_replace>)
         
