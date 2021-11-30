@@ -1,11 +1,11 @@
-import { ValidationError, validate } from "class-validator"
+import { ValidationError, validate, ValidatorOptions } from "class-validator"
 import { QueryPredicateFunctionTransform } from "../../query/QueryPredicateFunctionTransform"
 import { RepositorySystemException } from "../RepositorySystemException"
 import { RepositoryValidationException } from "../RepositoryValidationException"
 
 export class ValidatorDataHandle {
 
-    async validateModel(modelName: string, item: any) {
+    async validateModel(modelName: string, item: any, validatorOptions?: ValidatorOptions) {
 
         const prototypeRegister = QueryPredicateFunctionTransform.prototypeRegister
 
@@ -17,7 +17,7 @@ export class ValidatorDataHandle {
 
         const objectToValidate = Object.assign(instance, item)
 
-        await validate(objectToValidate).then((errors: any) => {
+        await validate(objectToValidate, validatorOptions ||  { whitelist: true }).then((errors: any) => {
             if (errors.length > 0) {
                 throw new RepositoryValidationException(`Model validation failed, model ref ${modelName}, look at the list of constraints.`, this.getConstraints(errors))
             }

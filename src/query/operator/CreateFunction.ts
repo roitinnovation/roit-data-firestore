@@ -20,6 +20,7 @@ export class CreateFunction {
     async create(items: any | Array<any>): Promise<Array<any>> {
 
         let modelName = ''
+        let validatorOptions
 
         if(!Array.isArray(items)) {
             items = [ items ]
@@ -33,14 +34,14 @@ export class CreateFunction {
         const { newDate } = (global as any).instances.dateRef
         const uuid = (global as any).instances.uuid
 
-        const collection = db.collection('<COLLECTION_RAPLACE>')
+        const collection = db.collection('<COLLECTION_REPLACE>')
 
         const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
 
         const batch = db.batch()
 
         for(const item of items) {
-            await validatorDataHandle.validateModel(modelName, item)
+            await validatorDataHandle.validateModel(modelName, item, validatorOptions)
 
             if(!item.id) {
                 item.id = uuid();
@@ -64,9 +65,33 @@ export class CreateFunction {
         return items
     }
 
+    async updatePartial(id: Required<string>, item: any): Promise<void> {
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const { newDate } = (global as any).instances.dateRef
+
+        const lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+        const updateAt = newDate()
+        const updateTimestampAt = new Date(updateAt).getTime()
+
+        const document = db.collection('<COLLECTION_REPLACE>').doc(id)
+
+        try {
+            await document.update({ 
+                lastServiceModify,
+                updateAt,
+                updateTimestampAt,
+                ...item
+            });
+        } catch(e) {
+            console.error(e?.details)
+        }
+    }
+
     async update(items: any | Array<any>): Promise<any> {
 
         let modelName = ''
+        let validatorOptions
 
         if(!Array.isArray(items)) {
             items = [ items ]
@@ -79,7 +104,7 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const { newDate } = (global as any).instances.dateRef
 
-        const collection = db.collection('<COLLECTION_RAPLACE>')
+        const collection = db.collection('<COLLECTION_REPLACE>')
 
         const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
 
@@ -87,7 +112,7 @@ export class CreateFunction {
 
         for(const item of items) {
 
-            await validatorDataHandle.validateModel(modelName, item)
+            await validatorDataHandle.validateModel(modelName, item, validatorOptions)
 
             if(!item.id) {
                 throw new RepositoryBusinessException(`Id is required`, [])
@@ -111,6 +136,7 @@ export class CreateFunction {
     async createOrUpdate(items: any | Array<any>): Promise<Array<any>> {
 
         let modelName = ''
+        let validatorOptions
 
         if(!Array.isArray(items)) {
             items = [ items ]
@@ -124,14 +150,14 @@ export class CreateFunction {
         const { newDate } = (global as any).instances.dateRef
         const uuid = (global as any).instances.uuid
 
-        const collection = db.collection('<COLLECTION_RAPLACE>')
+        const collection = db.collection('<COLLECTION_REPLACE>')
 
         const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
 
         const batch = db.batch()
 
         for(const item of items) {
-            await validatorDataHandle.validateModel(modelName, item)
+            await validatorDataHandle.validateModel(modelName, item, validatorOptions)
 
             if(!item.id) {
                 item.id = uuid();
@@ -175,7 +201,7 @@ export class CreateFunction {
 
         const batch = db.batch()
 
-        const collection = db.collection('<COLLECTION_RAPLACE>')
+        const collection = db.collection('<COLLECTION_REPLACE>')
 
         ids.forEach(id => {
             const docRef = collection.doc(id)
@@ -203,7 +229,7 @@ export class CreateFunction {
 
         const queryCreatorConfig: QueryCreatorConfig = (global as any).instances.queryCreatorConfig
 
-        const collection = db.collection('<COLLECTION_RAPLACE>')
+        const collection = db.collection('<COLLECTION_REPLACE>')
 
         let documentRef = queryCreatorConfig.buildPaging(collection, paging)
         const snapshot = await documentRef.get()
@@ -234,7 +260,7 @@ export class CreateFunction {
             return result
         }
 
-        const collection = db.collection('<COLLECTION_RAPLACE>')
+        const collection = db.collection('<COLLECTION_REPLACE>')
 
         const response = await collection.doc(id).get()
 
