@@ -17,7 +17,7 @@ export class ValidatorDataHandle {
 
         const objectToValidate = Object.assign(instance, item)
 
-        await validate(objectToValidate, validatorOptions ||  { whitelist: true }).then((errors: any) => {
+        await validate(objectToValidate, validatorOptions).then((errors: any) => {
             if (errors.length > 0) {
                 throw new RepositoryValidationException(`Model validation failed, model ref ${modelName}, look at the list of constraints.`, this.getConstraints(errors))
             }
