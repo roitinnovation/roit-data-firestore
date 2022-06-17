@@ -15,7 +15,7 @@ import { Cacheable } from "../../src/decorators/Cacheable";
     ],
 })
 export class Repository1 extends BaseRepository<User> {
-    
+
     @Query()
     findByName: (name: string) => Promise<Array<User>>
 
@@ -24,4 +24,24 @@ export class Repository1 extends BaseRepository<User> {
 
     @Query()
     findByNameAndAgeAndOrderByIdDesc: (name: string, age: number) => Promise<Array<User>>
+
+    findByNameAndId(name: string, id: string): Promise<Array<User>> {
+        return this.query([
+            {
+                field: 'name',
+                operator: '==',
+                value: name
+            },
+            {
+                field: 'id',
+                operator: '==',
+                value: id
+            }
+        ])
+    }
+
+
+    findByNameAndId2(name: string, id: string): Promise<Array<User>> {
+        return this.query([{ name }, { id }])
+    }
 }

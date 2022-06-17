@@ -3,6 +3,8 @@
 import { Env, Environment } from 'roit-environment';
 import { Repository1 } from './example/Repository1';
 
+jest.setTimeout(50000)
+
 Environment.envOptions({ manuallyEnv: Env.TEST })
 describe('TesteExample tests', () => {
 
@@ -17,6 +19,7 @@ describe('TesteExample tests', () => {
     expect(resultCreate[0].age).toBe(41)
 
   });
+
 
   it('delete simple test', async () => {
 

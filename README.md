@@ -185,3 +185,66 @@ Any query with paging
 findByNameAndAge: (name: string, age: number, paging?: Paging) => Promise<Array<User>>
 
 ```
+
+#### Manual Query 
+
+```
+
+Use query() method preset in BaseRepository
+
+
+findByNameAndId(name: string, id: string): Promise<Array<User>> {
+    return this.query([
+        {
+            field: 'name',
+            operator: '==',
+            value: name
+        },
+        {
+            field: 'id',
+            operator: '==',
+            value: id
+        }
+    ])
+}
+
+OR
+
+findByNameAndId2(name: string, id: string): Promise<Array<User>> {
+    return this.query([{ name }, { id }])
+}
+
+Full example
+
+export class Repository1 extends BaseRepository<User> {
+
+    @Query()
+    findByName: (name: string) => Promise<Array<User>>
+
+    @Query()
+    findByNameAndAge: (name: string, age: number, paging?: Paging) => Promise<Array<User>>
+
+    @Query()
+    findByNameAndAgeAndOrderByIdDesc: (name: string, age: number) => Promise<Array<User>>
+
+    findByNameAndId(name: string, id: string): Promise<Array<User>> {
+        return this.query([
+            {
+                field: 'name',
+                operator: '==',
+                value: name
+            },
+            {
+                field: 'id',
+                operator: '==',
+                value: id
+            }
+        ])
+    }
+
+
+    findByNameAndId2(name: string, id: string): Promise<Array<User>> {
+        return this.query([{ name }, { id }])
+    }
+}
+```

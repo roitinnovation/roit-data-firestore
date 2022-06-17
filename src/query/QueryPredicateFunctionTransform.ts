@@ -20,6 +20,7 @@ export class QueryPredicateFunctionTransform {
 
     public static prototypeRegister: Map<string, Object> = new Map
     public static schemaRegister: Map<string, any> = new Map
+    public static classConfig: Map<string, RepositoryOptions> = new Map
 
     static createFunction(queryPredicate: Array<QueryPredicate>, methodSignature: string, repositoryClassName: string, options: RepositoryOptions): Function {
 
@@ -33,11 +34,13 @@ export class QueryPredicateFunctionTransform {
             queryCreatorConfig: new QueryCreatorConfig,
             cacheResolver: CacheResolver.getInstance(),
             environmentUtil: new EnvironmentUtil
-        } 
+        }
 
-        if(!options?.collection) {
+        if (!options?.collection) {
             throw new Error(`Collection is required`)
         }
+
+        this.classConfig.set(repositoryClassName, options)
 
         const modelName = options.validateModel.name
 
@@ -46,13 +49,13 @@ export class QueryPredicateFunctionTransform {
         // const target = getMetadataStorage()['validationMetadatas'].find((valu: any) => String(valu.target).includes(modelName))
 
         // console.log(getMetadataStorage()['validationMetadatas'].map((valu: any) => String(valu.target)))
-    
+
         const instance = Object.create(options.validateModel)
         this.schemaRegister.set(modelName, targetConstructorToSchema(instance))
 
         const func = new CreateFunction().createFunction(methodSignature)
 
-        if(func) {
+        if (func) {
             let functionString = func.toString()
                 .replace(methodSignature, 'async function')
                 .replace('return __awaiter(this, void 0, void 0, function* () {', '')
@@ -65,7 +68,7 @@ export class QueryPredicateFunctionTransform {
             functionString = this.removeLast(functionString, '});')
             return Function(`return ${functionString}`)()
         }
-        
+
         let parameters = queryPredicate.filter(query => query.operator?.includes('.where'))
         parameters = parameters.concat({ attribute: 'paging' } as any)
 
@@ -81,8 +84,8 @@ export class QueryPredicateFunctionTransform {
         return Function(`return ${functionBuilder}`)()
     }
 
-    private static removeLast(value: string, repl: string){
+    private static removeLast(value: string, repl: string) {
         const valueArr = value.split(repl)
-        return valueArr.slice(0,-1).join(repl) + valueArr.pop()
-    }      
+        return valueArr.slice(0, -1).join(repl) + valueArr.pop()
+    }
 }
