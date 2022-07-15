@@ -1,3 +1,4 @@
+import { OrderByDirection } from "@google-cloud/firestore";
 
 export class MQuery {
 
@@ -10,4 +11,18 @@ export class MQuery {
 
 export class MQuerySimple {
     [key: string]: string | number;
+}
+
+export class Config {
+
+    orderBy?: OrderBy
+
+    query?: Array<MQuery | MQuerySimple>
+}
+
+export class OrderBy {
+
+    field: string
+
+    direction: OrderByDirection = 'asc'
 }

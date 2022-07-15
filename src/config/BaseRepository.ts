@@ -1,7 +1,7 @@
 import { Query } from "../decorators/Query";
+import { Config } from '../model/MQuery';
 import { Paging } from "../model/Paging";
 import { ManualQueryHelper } from '../query/ManualQueryHelper';
-import { MQuery, MQuerySimple } from '../model/MQuery';
 export abstract class BaseRepository<T> {
 
     @Query()
@@ -25,8 +25,8 @@ export abstract class BaseRepository<T> {
     @Query()
     delete: (id: Required<string> | Array<string>) => Promise<Array<string>>
 
-    async query(query: Array<MQuery | MQuerySimple>): Promise<T[]> {
+    async query(config: Config): Promise<T[]> {
         const className = this.constructor.prototype.constructor.name
-        return ManualQueryHelper.executeQueryManual(className, query)
+        return ManualQueryHelper.executeQueryManual(className, config)
     }
 }

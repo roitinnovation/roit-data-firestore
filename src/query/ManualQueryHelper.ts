@@ -2,15 +2,15 @@ import { Firestore } from "@google-cloud/firestore";
 import { FirestoreInstance } from '../config/FirestoreInstance';
 import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
 import { RepositoryOptions } from '../model/RepositoryOptions';
-import { MQuery, MQuerySimple } from '../model/MQuery';
+import { MQuery, MQuerySimple, Config } from '../model/MQuery';
 
 export class ManualQueryHelper {
 
-    static async executeQueryManual(className: string, query: Array<MQuery | MQuerySimple>): Promise<Array<any>> {
+    static async executeQueryManual(className: string, config: Config): Promise<Array<any>> {
 
         const repositoryOptions: RepositoryOptions | undefined = QueryPredicateFunctionTransform.classConfig.get(className)
 
-        if (repositoryOptions && query.length > 0) {
+        if (repositoryOptions) {
 
             const firestoreInstance: Firestore = FirestoreInstance.getInstance()
 
@@ -18,25 +18,41 @@ export class ManualQueryHelper {
 
             let queryList: Array<MQuery>
 
-            if (query.some(que => Object.keys(que).length == 1)) {
-                queryList = this.convertToMQuery(query as Array<MQuerySimple>)
-            } else {
-                queryList = query as Array<MQuery>
+            let queryExecute: any
+
+            if (config.query) {
+                if (config.query.some(que => Object.keys(que).length == 1)) {
+                    queryList = this.convertToMQuery(config.query as Array<MQuerySimple>)
+                } else {
+                    queryList = config.query as Array<MQuery>
+                }
+
+                const queryInit = queryList[0]
+
+                queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value)
+
+                queryList.shift()
+
+                queryList.forEach(que => {
+                    queryExecute = queryExecute.where(que.field, que.operator, que.value)
+                })
             }
 
-            const queryInit = queryList[0]
 
-            let queryExecute: FirebaseFirestore.Query = collection.where(queryInit.field, queryInit.operator, queryInit.value)
+            if (config && config?.orderBy) {
+                if (queryExecute) {
+                    queryExecute = queryExecute.orderBy(config.orderBy.field, config.orderBy.direction)
+                } else {
+                    queryExecute = collection.orderBy(config.orderBy.field, config.orderBy.direction)
+                }
 
-            queryList.shift()
+            }
 
-            queryList.forEach(que => {
-                queryExecute = queryExecute.where(que.field, que.operator, que.value)
-            })
+            if (queryExecute) {
+                const snapshot = await queryExecute.get()
 
-            const snapshot = await queryExecute.get()
-
-            return this.getData(snapshot)
+                return this.getData(snapshot)
+            }
         }
 
         return []

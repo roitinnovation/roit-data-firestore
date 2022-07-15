@@ -26,22 +26,26 @@ export class Repository1 extends BaseRepository<User> {
     findByNameAndAgeAndOrderByIdDesc: (name: string, age: number) => Promise<Array<User>>
 
     findByNameAndId(name: string, id: string): Promise<Array<User>> {
-        return this.query([
-            {
-                field: 'name',
-                operator: '==',
-                value: name
-            },
-            {
-                field: 'id',
-                operator: '==',
-                value: id
-            }
-        ])
+        return this.query({
+            query: [
+                {
+                    field: 'name',
+                    operator: '==',
+                    value: name
+                },
+                {
+                    field: 'id',
+                    operator: '==',
+                    value: id
+                }
+            ]
+        })
     }
 
 
     findByNameAndId2(name: string, id: string): Promise<Array<User>> {
-        return this.query([{ name }, { id }])
+        return this.query({
+            query: [{ name }, { id }]
+        })
     }
 }
