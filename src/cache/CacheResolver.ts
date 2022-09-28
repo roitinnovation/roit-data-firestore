@@ -1,7 +1,8 @@
 import { CacheableOptions } from "../model/CacheableOptions"
 import { VillarImplDiscovery, VillarImplResolver } from "villar"
-import { CacheProvider, InMemory } from "./providers"
+import { CacheProvider, InMemoryCacheProvider } from "./providers"
 import { Environment } from "roit-environment"
+import { RedisCacheProvider } from "./providers/RedisCacheProvider"
 
 export class CacheResolver {
 
@@ -12,7 +13,7 @@ export class CacheResolver {
     private cacheProvider: CacheProvider
 
     private constructor() {
-
+        VillarImplResolver.register(InMemoryCacheProvider, RedisCacheProvider)
     }
 
     static getInstance(): CacheResolver {
@@ -21,11 +22,7 @@ export class CacheResolver {
 
     addRepository(repository: string, option?: CacheableOptions) {
         const options = option || new CacheableOptions
-
-        VillarImplResolver.register(InMemory)
-
-        this.cacheProvider = VillarImplDiscovery.getInstance().findImpl<CacheProvider>(options.cacheProvider)!
-
+        this.cacheProvider = VillarImplDiscovery.getInstance().findImpl<CacheProvider>(options.cacheProvider!)!
         this.repositorys.set(repository, options)
     }
 
@@ -34,16 +31,33 @@ export class CacheResolver {
         return `${service}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
     }
 
-    getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): any | undefined {
+    async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<string | null> {
         const key = this.buildKey(repositoryClassName, methodSignature, paramValue)
-        this.cacheProvider.getCacheResult(key)
+        return this.cacheProvider.getCacheResult(key)
     }
 
-    cacheResult(repositoryClassName: string, methodSignature: string, valueToCache: any, ...paramValue: any[]): boolean {
+    async cacheResult(repositoryClassName: string, methodSignature: string, valueToCache: any, ...paramValue: any[]): Promise<boolean> {
         const option: CacheableOptions | undefined = this.repositorys.get(repositoryClassName)
 
-        const key = this.buildKey(repositoryClassName, methodSignature, paramValue)
+        if (option) {
+            const key = this.buildKey(repositoryClassName, methodSignature, paramValue)
+            const excludesMethod = Array.isArray(option?.excludesMethods) && option?.excludesMethods?.find(me => me == methodSignature)
+            const notIncludeOnlyMethod = Array.isArray(option?.includeOnlyMethods) && option?.includeOnlyMethods?.length > 0 && option?.includeOnlyMethods?.find(me => me == methodSignature) == undefined
+            const notContainResult = option?.cacheOnlyContainResults ? ((Array.isArray(valueToCache) && valueToCache.length == 0) || valueToCache == null && valueToCache == undefined) : false
 
-        return this.cacheProvider.saveCacheResult(key, option, methodSignature, valueToCache)
+            if (excludesMethod || notIncludeOnlyMethod || notContainResult) {
+                return false
+            }
+
+            await this.cacheProvider.saveCacheResult(key, valueToCache, option.cacheExpiresInSeconds)
+
+            if (Boolean(Environment.getProperty('firestore.debug'))) {
+                console.debug('[DEBUG] Caching >', `Storage cache from key: ${key}`)
+            }
+
+            return true
+        }
+
+        return false
     }
 }

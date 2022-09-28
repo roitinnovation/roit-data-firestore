@@ -247,10 +247,10 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
 
-        const result = cacheResolver.getCacheResult(repositoryClassName, methodSignature, 'Any')
+        const result = await cacheResolver.getCacheResult(repositoryClassName, methodSignature, 'Any')
         
         if(result) {
-            return result
+            return result as unknown as any[]
         }
 
         const queryCreatorConfig: QueryCreatorConfig = (global as any).instances.queryCreatorConfig
@@ -273,7 +273,7 @@ export class CreateFunction {
             items.push({ ...data })
         })
 
-        cacheResolver.cacheResult(repositoryClassName, methodSignature, items, 'Any')
+        await cacheResolver.cacheResult(repositoryClassName, methodSignature, items, 'Any')
 
         return items
     }
@@ -286,7 +286,7 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
 
-        const result = cacheResolver.getCacheResult(repositoryClassName, methodSignature, id)
+        const result = await cacheResolver.getCacheResult(repositoryClassName, methodSignature, id)
         
         if(result) {
             return result
@@ -304,7 +304,7 @@ export class CreateFunction {
 
         const item = response.data()
 
-        cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id)
+        await cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id)
 
         return item
     }

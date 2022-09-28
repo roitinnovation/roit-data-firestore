@@ -1,2 +1,2 @@
 export { CacheProvider } from './CacheProvider'
-export { InMemory } from './InMemory'
+export { InMemoryCacheProvider } from './InMemoryCacheProvider'
