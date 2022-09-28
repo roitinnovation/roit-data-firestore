@@ -1,9 +1,10 @@
+import { CacheProviders } from "./CacheProviders"
 
 export class CacheableOptions {
 
     cacheOnlyContainResults?: boolean = true
 
-    cacheProvider?: string
+    cacheProvider: string = CacheProviders.LOCAL
 
     excludesMethods?: Array<string> = new Array
 

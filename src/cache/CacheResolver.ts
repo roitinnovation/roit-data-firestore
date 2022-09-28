@@ -1,6 +1,7 @@
-import { Environment } from "roit-environment"
 import { CacheableOptions } from "../model/CacheableOptions"
-
+import { VillarImplDiscovery, VillarImplResolver } from "villar"
+import { CacheProvider, InMemory } from "./providers"
+import { Environment } from "roit-environment"
 
 export class CacheResolver {
 
@@ -8,7 +9,7 @@ export class CacheResolver {
 
     private repositorys: Map<string, CacheableOptions> = new Map
 
-    private localCacheMap: Map<string, any> = new Map
+    private cacheProvider: CacheProvider
 
     private constructor() {
 
@@ -19,49 +20,30 @@ export class CacheResolver {
     }
 
     addRepository(repository: string, option?: CacheableOptions) {
-        this.repositorys.set(repository, option || {
-            cacheOnlyContainResults: true,
-            cacheProvider: 'Local',
-            excludesMethods: [],
-            includeOnlyMethods: []
-        })
-    }
+        const options = option || new CacheableOptions
 
-    getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): any | undefined {
-        const result = this.localCacheMap.get(this.buildKey(repositoryClassName, methodSignature, paramValue))
-        if(result) {
-            console.debug('[DEBUG] Caching >', `Return value in cache from key: ${this.buildKey(repositoryClassName, methodSignature, paramValue)}`)
-        }
-        return result
-    }
+        VillarImplResolver.register(InMemory)
 
-    cacheResult(repositoryClassName: string, methodSignature: string, valueToCache: any, ...paramValue: any[]): boolean {
+        this.cacheProvider = VillarImplDiscovery.getInstance().findImpl<CacheProvider>(options.cacheProvider)!
 
-        const option: CacheableOptions | undefined = this.repositorys.get(repositoryClassName)
-
-        if(option) {
-
-            const excludesMethod = Array.isArray(option?.excludesMethods) && option?.excludesMethods?.find(me => me == methodSignature)
-            const notIncludeOnlyMethod = Array.isArray(option?.includeOnlyMethods) && option?.includeOnlyMethods?.length > 0 && option?.includeOnlyMethods?.find(me => me == methodSignature) == undefined
-            const notContainResult = option?.cacheOnlyContainResults ? ((Array.isArray(valueToCache) && valueToCache.length == 0) || valueToCache == null && valueToCache == undefined) : false
-
-            if(excludesMethod || notIncludeOnlyMethod || notContainResult) {
-                return false
-            }
-
-            this.localCacheMap.set(this.buildKey(repositoryClassName, methodSignature, paramValue), valueToCache)
-
-            if(Boolean(Environment.getProperty('firestore.debug'))) {
-                console.debug('[DEBUG] Caching >', `Storage cache from key: ${this.buildKey(repositoryClassName, methodSignature, paramValue)}`)
-            }
-
-            return true
-        }
-
-        return false
+        this.repositorys.set(repository, options)
     }
 
     private buildKey(repositoryClassName: string, methodSignature: string, ...paramValue: any[]) {
-        return `${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
+        const service = Environment.getProperty('service')
+        return `${service}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
+    }
+
+    getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): any | undefined {
+        const key = this.buildKey(repositoryClassName, methodSignature, paramValue)
+        this.cacheProvider.getCacheResult(key)
+    }
+
+    cacheResult(repositoryClassName: string, methodSignature: string, valueToCache: any, ...paramValue: any[]): boolean {
+        const option: CacheableOptions | undefined = this.repositorys.get(repositoryClassName)
+
+        const key = this.buildKey(repositoryClassName, methodSignature, paramValue)
+
+        return this.cacheProvider.saveCacheResult(key, option, methodSignature, valueToCache)
     }
 }
