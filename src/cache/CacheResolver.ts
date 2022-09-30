@@ -28,7 +28,7 @@ export class CacheResolver {
 
     private buildKey(repositoryClassName: string, methodSignature: string, ...paramValue: any[]) {
         const service = Environment.getProperty('service')
-        return `${service}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
+        return `${Environment.currentEnv()}:${service}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
     }
 
     async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<string | null> {
@@ -43,7 +43,7 @@ export class CacheResolver {
             const key = this.buildKey(repositoryClassName, methodSignature, paramValue)
             const excludesMethod = Array.isArray(option?.excludesMethods) && option?.excludesMethods?.find(me => me == methodSignature)
             const notIncludeOnlyMethod = Array.isArray(option?.includeOnlyMethods) && option?.includeOnlyMethods?.length > 0 && option?.includeOnlyMethods?.find(me => me == methodSignature) == undefined
-            const notContainResult = option?.cacheOnlyContainResults ? ((Array.isArray(valueToCache) && valueToCache.length == 0) || valueToCache == null && valueToCache == undefined) : false
+            const notContainResult = option?.cacheOnlyContainResults ? ((Array.isArray(valueToCache) && valueToCache.length == 0) || !valueToCache) : false
 
             if (excludesMethod || notIncludeOnlyMethod || notContainResult) {
                 return false
