@@ -18,6 +18,7 @@ export class RedisCacheProvider implements CacheProvider {
 
             if (!url) {
                 console.error(`[ERROR] Redis Caching > environtment variable "firestore.cache.redisUrl" was not found!`)
+                return
             }
 
             this.redis = createClient({ url })
@@ -37,10 +38,14 @@ export class RedisCacheProvider implements CacheProvider {
             this.redis.connect()
         }
     }
+
+    private isRedisReady() {
+        return this.redis && this.redis.isReady
+    }
     
     async getCacheResult(key: string): Promise<any | null> {
         try {
-            if (this.redis.isReady) {
+            if (this.isRedisReady()) {
                 const result = await this.redis.get(key)
         
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
@@ -61,11 +66,14 @@ export class RedisCacheProvider implements CacheProvider {
     }
 
     async saveCacheResult(key: string, valueToCache: any, ttl: number | undefined): Promise<void> {
-        if (this.redis.isReady) {
+        if (this.isRedisReady()) {
             try {
                 await this.redis.set(key, JSON.stringify(valueToCache), {
                     EX: ttl || 0
                 })                
+                if (Boolean(Environment.getProperty('firestore.debug'))) {
+                    console.debug('[DEBUG] Caching >', `Storage cache from key: ${key}`)
+                }
             } catch (error) {
                 console.log(`[DEBUG] Redis Caching > Error when saving cache. Key: ${key}, value: ${valueToCache}, error: ${error}`)
             }            
@@ -74,7 +82,7 @@ export class RedisCacheProvider implements CacheProvider {
 
     async delete(key: string): Promise<void> {
         try {
-            if (this.redis.isReady) {
+            if (this.isRedisReady()) {
                 await this.redis.del(key)
             }            
         } catch (error) {
