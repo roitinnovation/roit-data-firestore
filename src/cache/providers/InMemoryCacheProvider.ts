@@ -12,7 +12,7 @@ export class InMemoryCacheProvider implements CacheProvider {
     
     private cache: NodeCache = new NodeCache();
 
-    getCacheResult(key: string): Promise<string | null> {
+    getCacheResult(key: string): Promise<any | null> {
         const result = this.cache.get(key) as string | null
 
         if (Boolean(Environment.getProperty('firestore.debug'))) {
@@ -28,6 +28,11 @@ export class InMemoryCacheProvider implements CacheProvider {
 
     saveCacheResult(key: string, valueToCache: any, ttl: number): Promise<void> {
         this.cache.set(key, valueToCache, ttl || 0)
+        return Promise.resolve()
+    }
+
+    delete(key: string): Promise<void> {
+        this.cache.del(key)
         return Promise.resolve()
     }
 }

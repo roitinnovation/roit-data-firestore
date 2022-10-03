@@ -35,7 +35,7 @@ export class RedisCacheProvider implements CacheProvider {
         }
     }
     
-    async getCacheResult(key: string): Promise<string | null> {
+    async getCacheResult(key: string): Promise<any | null> {
         await this.checkRedisConnection()
 
         const result = await this.redis.get(key)
@@ -61,5 +61,9 @@ export class RedisCacheProvider implements CacheProvider {
         await this.redis.set(key, JSON.stringify(valueToCache), {
             EX: ttl || 0
         })
+    }
+
+    async delete(key: string): Promise<void> {
+        await this.redis.del(key)
     }
 }

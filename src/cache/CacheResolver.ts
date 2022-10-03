@@ -31,9 +31,25 @@ export class CacheResolver {
         return `${Environment.currentEnv()}:${service}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
     }
 
+    public buildRepositoryKey(repositoryClassName: string) {
+        return `${Environment.currentEnv()}:${Environment.getProperty('service')}:${repositoryClassName}`
+    }
+
     async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<string | null> {
         const key = this.buildKey(repositoryClassName, methodSignature, paramValue)
         return this.cacheProvider.getCacheResult(key)
+    }
+
+    async revokeCacheFromRepository(repository: string) {
+        const keys = await this.cacheProvider.getCacheResult(repository)
+        if (keys && Array.isArray(keys)) {
+            for (const key of keys) {
+                if (Boolean(Environment.getProperty('firestore.debug'))) {
+                    console.debug('[DEBUG] Caching >', `Removing key: ${key}`)
+                }
+                await this.cacheProvider.delete(key)
+            }
+        }
     }
 
     async cacheResult(repositoryClassName: string, methodSignature: string, valueToCache: any, ...paramValue: any[]): Promise<boolean> {
@@ -50,6 +66,22 @@ export class CacheResolver {
             }
 
             await this.cacheProvider.saveCacheResult(key, valueToCache, option.cacheExpiresInSeconds)
+
+            const repositoryKey = this.buildRepositoryKey(repositoryClassName)
+
+            let cache: any[] = await this.cacheProvider.getCacheResult(repositoryKey)
+
+            if (!cache) {
+                cache = []
+            }
+
+            if (!cache.find(item => item === key)) {
+                cache.push(key)
+            }
+
+            const cacheTtl = 0
+
+            await this.cacheProvider.saveCacheResult(repositoryKey, cache, cacheTtl)
 
             if (Boolean(Environment.getProperty('firestore.debug'))) {
                 console.debug('[DEBUG] Caching >', `Storage cache from key: ${key}`)

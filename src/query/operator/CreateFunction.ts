@@ -91,6 +91,14 @@ export class CreateFunction {
                     updateTimestampAt,
                     ...item
                 });
+
+                let repositoryClassName = ''
+
+                const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
+    
+                const key = cacheResolver.buildRepositoryKey(repositoryClassName)
+    
+                await cacheResolver.revokeCacheFromRepository(key)                        
             } else {
                 console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
             }
@@ -138,6 +146,14 @@ export class CreateFunction {
             const docRef = collection.doc(item.id)
 
             batch.update(docRef, JSON.parse(JSON.stringify(item)))
+
+            let repositoryClassName = ''
+
+            const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
+
+            const key = cacheResolver.buildRepositoryKey(repositoryClassName)
+
+            await cacheResolver.revokeCacheFromRepository(key)            
         }
 
         if(!environmentUtil.areWeTesting()) { 
@@ -231,6 +247,14 @@ export class CreateFunction {
         })
 
         if(!environmentUtil.areWeTesting()) { 
+            let repositoryClassName = ''
+
+            const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
+
+            const key = cacheResolver.buildRepositoryKey(repositoryClassName)
+
+            await cacheResolver.revokeCacheFromRepository(key)   
+                        
             await batch.commit()
         } else {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
