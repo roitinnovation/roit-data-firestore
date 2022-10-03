@@ -83,10 +83,6 @@ export class CacheResolver {
 
             await this.cacheProvider.saveCacheResult(repositoryKey, cache, cacheTtl)
 
-            if (Boolean(Environment.getProperty('firestore.debug'))) {
-                console.debug('[DEBUG] Caching >', `Storage cache from key: ${key}`)
-            }
-
             return true
         }
 
