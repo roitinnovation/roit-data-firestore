@@ -1,13 +1,8 @@
-import { Implementation } from "villar";
-import { CacheProviders } from "../../model/CacheProviders";
 import { CacheProvider } from "./CacheProvider";
 import { createClient } from "redis";
 import { Environment } from "roit-environment";
 import { RedisClientType } from "@redis/client";
 
-@Implementation({
-    key: CacheProviders.REDIS
-})
 export class RedisCacheProvider implements CacheProvider {
 
     private redis: RedisClientType;

@@ -1,8 +1,8 @@
 import { CacheableOptions } from "../model/CacheableOptions"
-import { VillarImplDiscovery, VillarImplResolver } from "villar"
 import { CacheProvider, InMemoryCacheProvider } from "./providers"
 import { Environment } from "roit-environment"
 import { RedisCacheProvider } from "./providers/RedisCacheProvider"
+import { CacheProviders } from "../model/CacheProviders"
 
 export class CacheResolver {
 
@@ -10,10 +10,13 @@ export class CacheResolver {
 
     private repositorys: Map<string, CacheableOptions> = new Map
 
+    private providersImplMap: Map<string, any> = new Map
+
     private cacheProvider: CacheProvider
 
     private constructor() {
-        VillarImplResolver.register(InMemoryCacheProvider, RedisCacheProvider)
+        this.providersImplMap.set(CacheProviders.LOCAL, InMemoryCacheProvider)
+        this.providersImplMap.set(CacheProviders.REDIS, RedisCacheProvider)
     }
 
     static getInstance(): CacheResolver {
@@ -22,7 +25,9 @@ export class CacheResolver {
 
     addRepository(repository: string, option?: CacheableOptions) {
         const options = option || new CacheableOptions
-        this.cacheProvider = VillarImplDiscovery.getInstance().findImpl<CacheProvider>(options.cacheProvider!)!
+        const implementation = options.cacheProvider || CacheProviders.LOCAL
+        const providerImpl = this.providersImplMap.get(implementation)
+        this.cacheProvider = new providerImpl()
         this.repositorys.set(repository, options)
     }
 

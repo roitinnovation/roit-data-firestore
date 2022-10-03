@@ -1,13 +1,8 @@
 import { Environment } from "roit-environment";
-import { Implementation } from "villar";
-import { CacheProviders } from '../../model/CacheProviders'
 import { CacheProvider } from "./CacheProvider";
 
 import * as NodeCache from "node-cache";
 
-@Implementation({
-    key: CacheProviders.LOCAL
-})
 export class InMemoryCacheProvider implements CacheProvider {
     
     private cache: NodeCache = new NodeCache();
