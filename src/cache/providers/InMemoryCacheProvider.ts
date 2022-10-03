@@ -28,6 +28,9 @@ export class InMemoryCacheProvider implements CacheProvider {
 
     saveCacheResult(key: string, valueToCache: any, ttl: number): Promise<void> {
         this.cache.set(key, valueToCache, ttl || 0)
+        if (Boolean(Environment.getProperty('firestore.debug'))) {
+            console.debug('[DEBUG] Caching >', `Storage cache from key: ${key}`)
+        }
         return Promise.resolve()
     }
 
