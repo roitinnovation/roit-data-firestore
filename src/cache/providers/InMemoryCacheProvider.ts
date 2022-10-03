@@ -1,7 +1,7 @@
 import { Environment } from "roit-environment";
 import { CacheProvider } from "./CacheProvider";
 
-import * as NodeCache from "node-cache";
+import NodeCache from "node-cache";
 
 export class InMemoryCacheProvider implements CacheProvider {
     
