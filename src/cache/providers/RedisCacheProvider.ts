@@ -21,13 +21,14 @@ export class RedisCacheProvider implements CacheProvider {
             this.redis = createClient({ url })
 
             this.redis.on('error', (err: any) => {
+                this.isRedisReady = false
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
                     console.warn('[WARN] Redis error', err)
                 }
             });
 
             this.redis.on('ready', () => {
-                this.isRedisReady = true;
+                this.isRedisReady = true
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
                     console.log('[DEBUG] Redis Caching > Redis is ready')
                 }

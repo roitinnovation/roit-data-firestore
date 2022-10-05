@@ -41,11 +41,19 @@ export class CacheResolver {
     }
 
     async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<string | null> {
+        if (!this.repositorys.get(repositoryClassName)) {
+            return null
+        }
+
         const key = this.buildKey(repositoryClassName, methodSignature, paramValue)
         return this.cacheProvider.getCacheResult(key)
     }
 
     async revokeCacheFromRepository(repository: string) {
+        if (!this.repositorys.get(repository)) {
+            return
+        }
+
         const keys = await this.cacheProvider.getCacheResult(repository)
         if (keys && Array.isArray(keys)) {
             for (const key of keys) {
