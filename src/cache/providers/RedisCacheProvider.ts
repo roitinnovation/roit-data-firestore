@@ -1,11 +1,13 @@
 import { CacheProvider } from "./CacheProvider";
 import { createClient } from "redis";
 import { Environment } from "roit-environment";
-import { RedisClientType } from "@redis/client";
+import { RedisClientType } from "redis";
 
 export class RedisCacheProvider implements CacheProvider {
 
     private redis: RedisClientType;
+
+    private isRedisReady = false;
 
     constructor() {
         if (!this.redis) {
@@ -25,6 +27,7 @@ export class RedisCacheProvider implements CacheProvider {
             });
 
             this.redis.on('ready', () => {
+                this.isRedisReady = true;
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
                     console.log('[DEBUG] Redis Caching > Redis is ready')
                 }
@@ -33,14 +36,10 @@ export class RedisCacheProvider implements CacheProvider {
             this.redis.connect()
         }
     }
-
-    private isRedisReady() {
-        return this.redis && this.redis.isReady
-    }
     
     async getCacheResult(key: string): Promise<any | null> {
         try {
-            if (this.isRedisReady()) {
+            if (this.isRedisReady) {
                 const result = await this.redis.get(key)
         
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
@@ -61,7 +60,7 @@ export class RedisCacheProvider implements CacheProvider {
     }
 
     async saveCacheResult(key: string, valueToCache: any, ttl: number | undefined): Promise<void> {
-        if (this.isRedisReady()) {
+        if (this.isRedisReady) {
             try {
                 await this.redis.set(key, JSON.stringify(valueToCache), {
                     EX: ttl || 0
@@ -77,7 +76,7 @@ export class RedisCacheProvider implements CacheProvider {
 
     async delete(key: string): Promise<void> {
         try {
-            if (this.isRedisReady()) {
+            if (this.isRedisReady) {
                 await this.redis.del(key)
             }            
         } catch (error) {
