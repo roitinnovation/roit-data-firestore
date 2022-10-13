@@ -75,8 +75,9 @@ The anotation Cacheable is responsible from handler storage data in cache, local
         'findById'
     ],
     cacheOnlyContainResults: true, // Cache data only query return value (optional, default true)
-    cacheProvider: 'Local', // Provider using  (optional, default 'Local')
-    includeOnlyMethods: [] // Includes only the methods that will be stored (optional, default [])
+    cacheProvider: CacheProviders.LOCAL, // REDIS or LOCAL  (optional, default 'Local')
+    includeOnlyMethods: [] // Includes only the methods that will be stored (optional, default []),
+    cacheExpiresInSeconds: 60 // Cache expiration in seconds
 })
 ```
 

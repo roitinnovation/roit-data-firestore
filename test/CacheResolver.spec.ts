@@ -10,10 +10,10 @@ describe('CacheResolver tests', () => {
 
     CacheResolver.getInstance().addRepository(repository)
 
-    CacheResolver.getInstance().cacheResult(repository, anyMethod, 10, anyValueParam)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod, 10, anyValueParam)
 
-    const result = CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam)
-    const result2 = CacheResolver.getInstance().getCacheResult(repository, anyMethod, 'value3')
+    const result = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam)
+    const result2 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, 'value3')
 
     expect(result).toBe(10)
     expect(result2).toBeUndefined()
@@ -33,26 +33,26 @@ describe('CacheResolver tests', () => {
         cacheOnlyContainResults: true
     })
 
-    CacheResolver.getInstance().cacheResult(repository, anyMethod, 10, anyValueParam)
-    CacheResolver.getInstance().cacheResult(repository, anyMethod, [], anyValueParam2)
-    CacheResolver.getInstance().cacheResult(repository, anyMethod, [ 'cookie' ], anyValueParam3)
-    CacheResolver.getInstance().cacheResult(repository, anyMethod, null, anyValueParam4)
-    CacheResolver.getInstance().cacheResult(repository, anyMethod, undefined, anyValueParam5)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod, 10, anyValueParam)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod, [], anyValueParam2)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod, [ 'cookie' ], anyValueParam3)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod, null, anyValueParam4)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod, undefined, anyValueParam5)
 
-    const result = CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam)
+    const result = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam)
     expect(result).toBe(10)
 
-    const result2 = CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam2)
+    const result2 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam2)
     expect(result2).toBeUndefined()
 
-    const result3 = CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam3)
+    const result3 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam3)
     expect(Array.isArray(result3)).toBeTruthy()
-    expect(result3.length).toBe(1)
+    expect(result3?.length).toBe(1)
 
-    const result4 = CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam4)
+    const result4 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam4)
     expect(result4).toBeUndefined()
 
-    const result5 = CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam5)
+    const result5 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam5)
     expect(result5).toBeUndefined()
   });
 
@@ -71,13 +71,13 @@ describe('CacheResolver tests', () => {
         ]
     })
 
-    CacheResolver.getInstance().cacheResult(repository, anyMethod, 10, anyValueParam)
-    CacheResolver.getInstance().cacheResult(repository, anyMethod2, 20, anyValueParam)
-    CacheResolver.getInstance().cacheResult(repository, anyMethod3, 30, anyValueParam)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod, 10, anyValueParam)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod2, 20, anyValueParam)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod3, 30, anyValueParam)
 
-    const result = CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam)
-    const result2 = CacheResolver.getInstance().getCacheResult(repository, anyMethod2, anyValueParam)
-    const result3 = CacheResolver.getInstance().getCacheResult(repository, anyMethod3, anyValueParam)
+    const result = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam)
+    const result2 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod2, anyValueParam)
+    const result3 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod3, anyValueParam)
 
     expect(result).toBe(10)
     expect(result2).toBeUndefined()
@@ -99,13 +99,13 @@ describe('CacheResolver tests', () => {
         ]
     })
 
-    CacheResolver.getInstance().cacheResult(repository, anyMethod, 10, anyValueParam)
-    CacheResolver.getInstance().cacheResult(repository, anyMethod2, 20, anyValueParam)
-    CacheResolver.getInstance().cacheResult(repository, anyMethod3, 30, anyValueParam)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod, 10, anyValueParam)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod2, 20, anyValueParam)
+    await CacheResolver.getInstance().cacheResult(repository, anyMethod3, 30, anyValueParam)
 
-    const result = CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam)
-    const result2 = CacheResolver.getInstance().getCacheResult(repository, anyMethod2, anyValueParam)
-    const result3 = CacheResolver.getInstance().getCacheResult(repository, anyMethod3, anyValueParam)
+    const result = await CacheResolver.getInstance().getCacheResult(repository, anyMethod, anyValueParam)
+    const result2 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod2, anyValueParam)
+    const result3 = await CacheResolver.getInstance().getCacheResult(repository, anyMethod3, anyValueParam)
 
     expect(result).toBeUndefined()
     expect(result2).toBe(20)

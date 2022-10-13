@@ -12,3 +12,5 @@ export { Cacheable } from "./decorators/Cacheable"
  */
 export { BaseRepository } from "./config/BaseRepository"
 export { ReadonlyRepository } from "./config/ReadonlyRepository"
+
+export { CacheProviders } from "./model/CacheProviders"

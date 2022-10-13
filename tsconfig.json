@@ -11,6 +11,7 @@
         "noImplicitThis": true,
         "noImplicitReturns": true,
         "noImplicitAny": true,
+        "esModuleInterop": true,
         "incremental": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
