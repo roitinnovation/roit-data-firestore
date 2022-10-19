@@ -21,11 +21,13 @@ export class ManualQueryHelper {
             let queryExecute: any
 
             if (config.query) {
-                if (config.query.some(que => Object.keys(que).length == 1)) {
-                    queryList = this.convertToMQuery(config.query as Array<MQuerySimple>)
-                } else {
-                    queryList = config.query as Array<MQuery>
-                }
+
+                queryList = config.query.map(query => {
+                    if (Object.keys(query).length === 1) {
+                        return this.convertToMQuery(query as MQuerySimple)
+                    }
+                    return query;
+                }) as Array<MQuery>
 
                 const queryInit = queryList[0]
 
@@ -58,16 +60,14 @@ export class ManualQueryHelper {
         return []
     }
 
-    private static convertToMQuery(query: Array<MQuerySimple>): Array<MQuery> {
-        return query.map(query => {
-            let mQueryBuilder: MQuery = new MQuery
-            Object.keys(query).forEach(itmKey => {
-                mQueryBuilder.field = itmKey
-                mQueryBuilder.operator = '=='
-                mQueryBuilder.value = query[itmKey]
-            })
-            return mQueryBuilder
+    private static convertToMQuery(query: MQuerySimple): MQuery {
+        let mQueryBuilder: MQuery = new MQuery
+        Object.keys(query).forEach(itmKey => {
+            mQueryBuilder.field = itmKey
+            mQueryBuilder.operator = '=='
+            mQueryBuilder.value = query[itmKey]
         })
+        return mQueryBuilder
     }
 
     private static getData(snapshot: any) {
