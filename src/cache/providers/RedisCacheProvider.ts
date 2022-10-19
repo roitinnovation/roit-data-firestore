@@ -1,11 +1,18 @@
 import { CacheProvider } from "./CacheProvider";
-import { createClient } from "redis";
 import { Environment } from "roit-environment";
-import { RedisClientType } from "redis";
+import { PlatformTools } from "../../platform/PlatformTools";
 
 export class RedisCacheProvider implements CacheProvider {
 
-    private redis: RedisClientType;
+    /**
+     * Redis module instance loaded dynamically.
+     */
+    private redis: any
+
+    /**
+     * Connected redis client.
+     */
+    private client: any
 
     private isRedisReady = false;
 
@@ -18,30 +25,32 @@ export class RedisCacheProvider implements CacheProvider {
                 return
             }
 
-            this.redis = createClient({ url })
+            this.redis = this.loadRedis()
 
-            this.redis.on('error', (err: any) => {
+            this.client = this.redis.createClient({ url })
+
+            this.client.on('error', (err: any) => {
                 this.isRedisReady = false
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
                     console.warn('[WARN] Redis error', err)
                 }
             });
 
-            this.redis.on('ready', () => {
+            this.client.on('ready', () => {
                 this.isRedisReady = true
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
                     console.log('[DEBUG] Redis Caching > Redis is ready')
                 }
             })
 
-            this.redis.connect()
+            this.client.connect()
         }
     }
     
     async getCacheResult(key: string): Promise<any | null> {
         try {
             if (this.isRedisReady) {
-                const result = await this.redis.get(key)
+                const result = await this.client.get(key)
         
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
                     if (result) {
@@ -63,7 +72,7 @@ export class RedisCacheProvider implements CacheProvider {
     async saveCacheResult(key: string, valueToCache: any, ttl: number | undefined): Promise<void> {
         if (this.isRedisReady) {
             try {
-                await this.redis.set(key, JSON.stringify(valueToCache), {
+                await this.client.set(key, JSON.stringify(valueToCache), {
                     EX: ttl || 0
                 })                
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
@@ -78,10 +87,20 @@ export class RedisCacheProvider implements CacheProvider {
     async delete(key: string): Promise<void> {
         try {
             if (this.isRedisReady) {
-                await this.redis.del(key)
+                await this.client.del(key)
             }            
         } catch (error) {
             console.log(`[DEBUG] Redis Caching > Error when deleting key from redis. ${key}`)
+        }
+    }
+
+    protected loadRedis(): any {
+        try {
+            return PlatformTools.load("redis")
+        } catch (e) {
+            throw new Error(
+                `Cannot use cache because redis is not installed. Please run "npm i redis@4.0.6 --save-exact".`,
+            )
         }
     }
 }
