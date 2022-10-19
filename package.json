@@ -1,6 +1,6 @@
 {
   "name": "@roit/roit-data-firestore",
-  "version": "0.0.24",
+  "version": "0.0.25-alpha.1",
   "main": "dist/index.js",
   "types": "src/index.ts",
   "scripts": {
@@ -17,7 +17,8 @@
     "jest": "^27.3.1",
     "ts-jest": "^27.0.7",
     "ts-node": "^8.3.0",
-    "typescript": "4.4.4"
+    "typescript": "4.4.4",
+    "redis": "4.0.6"
   },
   "dependencies": {
     "@google-cloud/firestore": "4.10.1",
@@ -26,7 +27,6 @@
     "class-validator-jsonschema": "^3.1.0",
     "firebase": "^9.2.0",
     "node-cache": "5.1.2",
-    "redis": "4.0.6",
     "reflect-metadata": "0.1.13",
     "roit-environment": "1.1.2",
     "shelljs": "^0.8.4",
