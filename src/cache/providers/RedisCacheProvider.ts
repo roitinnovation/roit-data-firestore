@@ -94,7 +94,7 @@ export class RedisCacheProvider implements CacheProvider {
         }
     }
 
-    protected loadRedis(): any {
+    private loadRedis(): any {
         try {
             return PlatformTools.load("redis")
         } catch (e) {
