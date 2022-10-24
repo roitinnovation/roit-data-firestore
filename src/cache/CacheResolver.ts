@@ -32,12 +32,11 @@ export class CacheResolver {
     }
 
     private buildKey(repositoryClassName: string, methodSignature: string, ...paramValue: any[]) {
-        const service = Environment.getProperty('service')
-        return `${Environment.currentEnv()}:${service}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
+        return `${Environment.currentEnv()}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
     }
 
     public buildRepositoryKey(repositoryClassName: string) {
-        return `${Environment.currentEnv()}:${Environment.getProperty('service')}:${repositoryClassName}`
+        return `${Environment.currentEnv()}:${repositoryClassName}`
     }
 
     async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<any | null | any[]> {
