@@ -3,12 +3,15 @@ import { FirestoreInstance } from '../config/FirestoreInstance';
 import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
 import { RepositoryOptions } from '../model/RepositoryOptions';
 import { MQuery, MQuerySimple, Config } from '../model/MQuery';
+import { CacheResolver } from "../cache/CacheResolver";
 
 export class ManualQueryHelper {
 
     static async executeQueryManual(className: string, config: Config): Promise<Array<any>> {
 
         const repositoryOptions: RepositoryOptions | undefined = QueryPredicateFunctionTransform.classConfig.get(className)
+
+        const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
 
         if (repositoryOptions) {
 
@@ -53,7 +56,16 @@ export class ManualQueryHelper {
             if (queryExecute) {
                 const snapshot = await queryExecute.get()
 
-                return this.getData(snapshot)
+                const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify(config))
+
+                if (result) {
+                    return result
+                }
+
+                const data = this.getData(snapshot);
+                
+                await cacheResolver.cacheResult(className, 'any', data, JSON.stringify(config))
+                return data
             }
         }
 

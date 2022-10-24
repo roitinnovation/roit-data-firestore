@@ -40,7 +40,7 @@ export class CacheResolver {
         return `${Environment.currentEnv()}:${Environment.getProperty('service')}:${repositoryClassName}`
     }
 
-    async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<string | null> {
+    async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<any | null | any[]> {
         if (!this.repositorys.get(repositoryClassName)) {
             return null
         }
@@ -49,12 +49,13 @@ export class CacheResolver {
         return this.cacheProvider.getCacheResult(key)
     }
 
-    async revokeCacheFromRepository(repository: string) {
+    async revokeCacheFromRepository(key: string) {
+        const repository = key.split(':').pop()!
         if (!this.repositorys.get(repository)) {
             return
         }
 
-        const keys = await this.cacheProvider.getCacheResult(repository)
+        const keys = await this.cacheProvider.getCacheResult(key)
         if (keys && Array.isArray(keys)) {
             for (const key of keys) {
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
@@ -63,6 +64,7 @@ export class CacheResolver {
                 await this.cacheProvider.delete(key)
             }
         }
+        await this.cacheProvider.delete(key)
     }
 
     async cacheResult(repositoryClassName: string, methodSignature: string, valueToCache: any, ...paramValue: any[]): Promise<boolean> {
