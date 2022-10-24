@@ -13,13 +13,14 @@
             return []
         }
         
-        const result = cacheResolver.getCacheResult(repositoryClassName, methodSignature, <params_replace>)
+        const result = await cacheResolver.getCacheResult(repositoryClassName, methodSignature, <params_replace>)
         
         if(result) {
             return result
         }
 
         const collection = db.collection('<collection_name_replace>')
+
 
         if(Number(global.instances.Environment.getProperty('firestore.debug'))) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
         const documentRef = global.instances.queryCreatorConfig.buildPaging(collection, paging)
@@ -32,7 +33,7 @@
             items.push(element)
         })
 
-        cacheResolver.cacheResult(repositoryClassName, methodSignature, items, <params_replace>)
+        await cacheResolver.cacheResult(repositoryClassName, methodSignature, items, <params_replace>)
 
     return items
 }
