@@ -32,15 +32,14 @@ export class CacheResolver {
     }
 
     private buildKey(repositoryClassName: string, methodSignature: string, ...paramValue: any[]) {
-        const service = Environment.getProperty('service')
-        return `${Environment.currentEnv()}:${service}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
+        return `${Environment.currentEnv()}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
     }
 
     public buildRepositoryKey(repositoryClassName: string) {
-        return `${Environment.currentEnv()}:${Environment.getProperty('service')}:${repositoryClassName}`
+        return `${Environment.currentEnv()}:${repositoryClassName}`
     }
 
-    async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<string | null> {
+    async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<any | null | any[]> {
         if (!this.repositorys.get(repositoryClassName)) {
             return null
         }
@@ -49,12 +48,14 @@ export class CacheResolver {
         return this.cacheProvider.getCacheResult(key)
     }
 
-    async revokeCacheFromRepository(repository: string) {
-        if (!this.repositorys.get(repository)) {
+    async revokeCacheFromRepository(repositoryClassName: string) {
+        const key = this.buildRepositoryKey(repositoryClassName)
+
+        if (!this.repositorys.get(repositoryClassName)) {
             return
         }
 
-        const keys = await this.cacheProvider.getCacheResult(repository)
+        const keys = await this.cacheProvider.getCacheResult(key)
         if (keys && Array.isArray(keys)) {
             for (const key of keys) {
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
@@ -63,6 +64,7 @@ export class CacheResolver {
                 await this.cacheProvider.delete(key)
             }
         }
+        await this.cacheProvider.delete(key)
     }
 
     async cacheResult(repositoryClassName: string, methodSignature: string, valueToCache: any, ...paramValue: any[]): Promise<boolean> {

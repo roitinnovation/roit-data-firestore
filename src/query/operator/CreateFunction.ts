@@ -18,6 +18,8 @@ export class CreateFunction {
         return null
     }
 
+    private async revokeCache() {}
+
     async create(items: any | Array<any>): Promise<Array<any>> {
 
         let modelName = ''
@@ -64,6 +66,7 @@ export class CreateFunction {
 
         if(!environmentUtil.areWeTesting()) { 
             await batch.commit()
+            await this.revokeCache()
         } else {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
         }
@@ -92,13 +95,7 @@ export class CreateFunction {
                     ...item
                 });
 
-                let repositoryClassName = ''
-
-                const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
-    
-                const key = cacheResolver.buildRepositoryKey(repositoryClassName)
-    
-                await cacheResolver.revokeCacheFromRepository(key)                        
+                await this.revokeCache()                
             } else {
                 console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
             }
@@ -145,19 +142,12 @@ export class CreateFunction {
 
             const docRef = collection.doc(item.id)
 
-            batch.update(docRef, JSON.parse(JSON.stringify(item)))
-
-            let repositoryClassName = ''
-
-            const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
-
-            const key = cacheResolver.buildRepositoryKey(repositoryClassName)
-
-            await cacheResolver.revokeCacheFromRepository(key)            
+            batch.update(docRef, JSON.parse(JSON.stringify(item)))        
         }
 
         if(!environmentUtil.areWeTesting()) { 
             await batch.commit()
+            await this.revokeCache()
         } else {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
         }
@@ -213,6 +203,7 @@ export class CreateFunction {
 
         if(!environmentUtil.areWeTesting()) { 
             await batch.commit()
+            await this.revokeCache()
         } else {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
         }
@@ -247,15 +238,8 @@ export class CreateFunction {
         })
 
         if(!environmentUtil.areWeTesting()) { 
-            let repositoryClassName = ''
-
-            const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
-
-            const key = cacheResolver.buildRepositoryKey(repositoryClassName)
-
-            await cacheResolver.revokeCacheFromRepository(key)   
-                        
             await batch.commit()
+            await this.revokeCache()
         } else {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
         }
