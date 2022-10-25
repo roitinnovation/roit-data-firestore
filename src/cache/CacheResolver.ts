@@ -48,9 +48,10 @@ export class CacheResolver {
         return this.cacheProvider.getCacheResult(key)
     }
 
-    async revokeCacheFromRepository(key: string) {
-        const repository = key.split(':').pop()!
-        if (!this.repositorys.get(repository)) {
+    async revokeCacheFromRepository(repositoryClassName: string) {
+        const key = this.buildRepositoryKey(repositoryClassName)
+
+        if (!this.repositorys.get(repositoryClassName)) {
             return
         }
 

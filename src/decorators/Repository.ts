@@ -1,3 +1,4 @@
+import { CacheResolver } from "../cache/CacheResolver"
 import { ClassMethodQueryMap } from "../config/ClassMethodQueryMap"
 import { RepositoryOptions } from "../model/RepositoryOptions"
 import { QueryPredicateFunctionTransform } from "../query/QueryPredicateFunctionTransform"
@@ -19,6 +20,11 @@ export function Repository(options: RepositoryOptions) {
 
         if(baseRepository) {
             methods = methods.concat(baseRepository)
+        }
+
+        constructor.prototype['revokeCache'] = async () => {
+            const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
+            await cacheResolver.revokeCacheFromRepository(className) 
         }
 
         methods.forEach(propertyKey => {
