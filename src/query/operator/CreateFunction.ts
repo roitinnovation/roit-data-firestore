@@ -8,28 +8,28 @@ import { QueryCreatorConfig } from "../QueryCreatorConfig";
 export class CreateFunction {
 
     createFunction(methodSignature: string): Function | null {
-        
+
         const func = (this as any)[methodSignature]
 
-        if(func) {
+        if (func) {
             return func
         }
 
         return null
     }
 
-    private async revokeCache() {}
+    private async revokeCache() { }
 
     async create(items: any | Array<any>): Promise<Array<any>> {
 
         let modelName = ''
         let validatorOptions
 
-        if(!Array.isArray(items)) {
-            items = [ items ]
+        if (!Array.isArray(items)) {
+            items = [items]
         }
 
-        if(items.length > 500) {
+        if (items.length > 500) {
             throw new RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, [])
         }
 
@@ -44,27 +44,29 @@ export class CreateFunction {
 
         const batch = db.batch()
 
-        for(const item of items) {
+        for (const item of items) {
             await validatorDataHandle.validateModel(modelName, item, validatorOptions)
 
-            if(!item.id) {
+            if (!item.id) {
                 item.id = uuid();
             }
-    
-            item.createAt = newDate()
-            item.createTimestampAt = new Date(item.createAt).getTime()
-    
+
+            if (!item.createAt) {
+                item.createAt = newDate()
+                item.createTimestampAt = new Date(item.createAt).getTime()
+            }
+
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
-    
+
             item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
-            
+
             const docRef = collection.doc(item.id)
 
             batch.set(docRef, JSON.parse(JSON.stringify(item)))
         }
 
-        if(!environmentUtil.areWeTesting()) { 
+        if (!environmentUtil.areWeTesting()) {
             await batch.commit()
             await this.revokeCache()
         } else {
@@ -87,19 +89,19 @@ export class CreateFunction {
         const document = db.collection('<COLLECTION_REPLACE>').doc(id)
 
         try {
-            if(!environmentUtil.areWeTesting()) { 
-                await document.update({ 
+            if (!environmentUtil.areWeTesting()) {
+                await document.update({
                     lastServiceModify,
                     updateAt,
                     updateTimestampAt,
                     ...item
                 });
 
-                await this.revokeCache()                
+                await this.revokeCache()
             } else {
                 console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
             }
-        } catch(e) {
+        } catch (e) {
             console.error(e?.details)
         }
     }
@@ -109,11 +111,11 @@ export class CreateFunction {
         let modelName = ''
         let validatorOptions
 
-        if(!Array.isArray(items)) {
-            items = [ items ]
+        if (!Array.isArray(items)) {
+            items = [items]
         }
 
-        if(items.length > 500) {
+        if (items.length > 500) {
             throw new RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, [])
         }
 
@@ -127,11 +129,11 @@ export class CreateFunction {
 
         const batch = db.batch()
 
-        for(const item of items) {
+        for (const item of items) {
 
             await validatorDataHandle.validateModel(modelName, item, validatorOptions)
 
-            if(!item.id) {
+            if (!item.id) {
                 throw new RepositoryBusinessException(`Id is required`, [])
             }
 
@@ -142,10 +144,10 @@ export class CreateFunction {
 
             const docRef = collection.doc(item.id)
 
-            batch.update(docRef, JSON.parse(JSON.stringify(item)))        
+            batch.update(docRef, JSON.parse(JSON.stringify(item)))
         }
 
-        if(!environmentUtil.areWeTesting()) { 
+        if (!environmentUtil.areWeTesting()) {
             await batch.commit()
             await this.revokeCache()
         } else {
@@ -160,11 +162,11 @@ export class CreateFunction {
         let modelName = ''
         let validatorOptions
 
-        if(!Array.isArray(items)) {
-            items = [ items ]
+        if (!Array.isArray(items)) {
+            items = [items]
         }
 
-        if(items.length > 500) {
+        if (items.length > 500) {
             throw new RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, [])
         }
 
@@ -179,29 +181,29 @@ export class CreateFunction {
 
         const batch = db.batch()
 
-        for(const item of items) {
+        for (const item of items) {
             await validatorDataHandle.validateModel(modelName, item, validatorOptions)
 
-            if(!item.id) {
+            if (!item.id) {
                 item.id = uuid();
             }
-    
-            if(!item.createAt) {
+
+            if (!item.createAt) {
                 item.createAt = newDate()
                 item.createTimestampAt = new Date(item.createAt).getTime()
             }
-    
+
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
-    
+
             item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
-            
+
             const docRef = collection.doc(item.id)
 
             batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true })
         }
 
-        if(!environmentUtil.areWeTesting()) { 
+        if (!environmentUtil.areWeTesting()) {
             await batch.commit()
             await this.revokeCache()
         } else {
@@ -213,15 +215,15 @@ export class CreateFunction {
 
     async delete(ids: string | Array<string>): Promise<Array<string>> {
 
-        if(!ids) {
+        if (!ids) {
             throw new RepositoryBusinessException(`Id is required`, [])
         }
 
-        if(!Array.isArray(ids)) {
-            ids = [ ids ]
+        if (!Array.isArray(ids)) {
+            ids = [ids]
         }
 
-        if(ids.length > 500) {
+        if (ids.length > 500) {
             throw new RepositoryBusinessException(`To perform the delete, the maximum number of elements is 500, size current: ${ids.length}`, [])
         }
 
@@ -237,7 +239,7 @@ export class CreateFunction {
             batch.delete(docRef)
         })
 
-        if(!environmentUtil.areWeTesting()) { 
+        if (!environmentUtil.areWeTesting()) {
             await batch.commit()
             await this.revokeCache()
         } else {
@@ -256,8 +258,8 @@ export class CreateFunction {
         const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
 
         const result = await cacheResolver.getCacheResult(repositoryClassName, methodSignature, 'Any')
-        
-        if(result) {
+
+        if (result) {
             return result as unknown as any[]
         }
 
@@ -266,7 +268,7 @@ export class CreateFunction {
         const collection = db.collection('<COLLECTION_REPLACE>')
 
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
-        if(environmentUtil.areWeTesting()) { 
+        if (environmentUtil.areWeTesting()) {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
             return []
         }
@@ -295,15 +297,15 @@ export class CreateFunction {
         const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
 
         const result = await cacheResolver.getCacheResult(repositoryClassName, methodSignature, id)
-        
-        if(result) {
+
+        if (result) {
             return result
         }
 
         const collection = db.collection('<COLLECTION_REPLACE>')
 
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
-        if(environmentUtil.areWeTesting()) { 
+        if (environmentUtil.areWeTesting()) {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
             return undefined
         }
