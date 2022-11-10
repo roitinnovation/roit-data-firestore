@@ -1,6 +1,6 @@
 {
   "name": "@roit/roit-data-firestore",
-  "version": "0.0.31",
+  "version": "0.0.32-rc.1",
   "main": "dist/index.js",
   "types": "src/index.ts",
   "scripts": {

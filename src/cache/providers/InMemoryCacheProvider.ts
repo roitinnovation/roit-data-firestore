@@ -12,19 +12,28 @@ export class InMemoryCacheProvider implements CacheProvider {
 
         if (Boolean(Environment.getProperty('firestore.debug'))) {
             if (result) {
-                console.debug('[DEBUG] Local Caching >', `Return value in cache from key: ${key}`)
+                console.debug('[DEBUG] Memory Caching >', `Return value in cache from key: ${key}`)
             } else {
-                console.log("[DEBUG] Local Caching > ", `Key [${key}] is not found in the cache`)
+                console.log("[DEBUG] Memory Caching > ", `Key [${key}] is not found in the cache`)
             }
         }
 
         return Promise.resolve(result)
     }
 
+    getKeys(query: string): Promise<string[]> {
+        try {
+            return Promise.resolve(this.cache.keys().filter(key => key.includes(query)))
+        } catch (error) {
+            console.log(`[DEBUG] Memory Caching > Error when getting KEYS with query: ${query}, error: ${error}`)
+        }
+        return Promise.resolve([])
+    }
+
     saveCacheResult(key: string, valueToCache: any, ttl: number): Promise<void> {
         this.cache.set(key, valueToCache, ttl || 0)
         if (Boolean(Environment.getProperty('firestore.debug'))) {
-            console.debug('[DEBUG] Caching >', `Storage cache from key: ${key}`)
+            console.debug('[DEBUG] Memory Caching >', `Storage cache from key: ${key}`)
         }
         return Promise.resolve()
     }

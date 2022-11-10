@@ -46,6 +46,16 @@ export class RedisCacheProvider implements CacheProvider {
             this.client.connect()
         }
     }
+    getKeys(query: string): Promise<string[]> {
+        try {
+            if (this.isRedisReady) {
+                return this.client.KEYS(`*${query}*`)
+            }
+        } catch (error) {
+            console.log(`[DEBUG] Redis Caching > Error when getting KEYS with query: ${query}, error: ${error}`)
+        }
+        return Promise.resolve([])
+    }
     
     async getCacheResult(key: string): Promise<any | null> {
         try {
