@@ -55,7 +55,7 @@ export class CacheResolver {
             return
         }
 
-        const keys = await this.cacheProvider.getCacheResult(key)
+        const keys = await this.cacheProvider.getKeys(`${key}`)
         if (keys && Array.isArray(keys)) {
             for (const key of keys) {
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
@@ -81,22 +81,6 @@ export class CacheResolver {
             }
 
             await this.cacheProvider.saveCacheResult(key, valueToCache, option.cacheExpiresInSeconds)
-
-            const repositoryKey = this.buildRepositoryKey(repositoryClassName)
-
-            let cache: any[] = await this.cacheProvider.getCacheResult(repositoryKey)
-
-            if (!cache) {
-                cache = []
-            }
-
-            if (!cache.find(item => item === key)) {
-                cache.push(key)
-            }
-
-            const cacheTtl = 0
-
-            await this.cacheProvider.saveCacheResult(repositoryKey, cache, cacheTtl)
 
             return true
         }
