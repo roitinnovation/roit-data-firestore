@@ -1,6 +1,7 @@
 import { targetConstructorToSchema } from 'class-validator-jsonschema';
 import { CacheResolver } from '../cache/CacheResolver';
 import { ValidatorDataHandle } from '../exception/handle/ValidatorDataHandle';
+import { FirestoreReadAuditResolver } from '../firestore-read-audit/FirestoreReadAuditResolver';
 import { QueryPredicate } from "../model/QueryPredicate";
 import { RepositoryOptions } from "../model/RepositoryOptions";
 import { EnvironmentUtil } from '../util/EnvironmentUtil';
@@ -33,7 +34,8 @@ export class QueryPredicateFunctionTransform {
             Environment,
             queryCreatorConfig: new QueryCreatorConfig,
             cacheResolver: CacheResolver.getInstance(),
-            environmentUtil: new EnvironmentUtil
+            environmentUtil: new EnvironmentUtil,
+            firestoreReadAuditResolver: FirestoreReadAuditResolver.getInstance()
         }
 
         if (!options?.collection) {
@@ -60,7 +62,7 @@ export class QueryPredicateFunctionTransform {
                 .replace(methodSignature, 'async function')
                 .replace('return __awaiter(this, void 0, void 0, function* () {', '')
                 .replace(/yield/g, 'await')
-                .replace('<COLLECTION_REPLACE>', options.collection)
+                .replace(/<COLLECTION_REPLACE>/g, options.collection)
                 .replace("let modelName = ''", `let modelName = '${modelName}'`)
                 .replace("let validatorOptions", `let validatorOptions = ${options?.validatorOptions ? JSON.stringify(options?.validatorOptions) : undefined}`)
                 .replace("let repositoryClassName = ''", `let repositoryClassName = '${repositoryClassName}'`)

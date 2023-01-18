@@ -4,6 +4,7 @@ import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransfo
 import { RepositoryOptions } from '../model/RepositoryOptions';
 import { MQuery, MQuerySimple, Config } from '../model/MQuery';
 import { CacheResolver } from "../cache/CacheResolver";
+import { FirestoreReadAuditResolver } from "../firestore-read-audit/FirestoreReadAuditResolver";
 
 export class ManualQueryHelper {
 
@@ -65,6 +66,16 @@ export class ManualQueryHelper {
                 const data = this.getData(snapshot);
                 
                 await cacheResolver.cacheResult(className, 'any', data, JSON.stringify(config))
+
+                const firestoreReadAuditResolver: FirestoreReadAuditResolver = (global as any).instances.firestoreReadAuditResolver
+
+                await firestoreReadAuditResolver.persistFirestoreRead({
+                    collection: repositoryOptions.collection,
+                    repositoryClassName: className,
+                    functionSignature: 'manual-query',
+                    params: JSON.stringify(config)
+                })
+
                 return data
             }
         }
