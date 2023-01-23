@@ -291,7 +291,8 @@ export class CreateFunction {
         await firestoreReadAuditResolver.persistFirestoreRead({
             collection: '<COLLECTION_REPLACE>',
             repositoryClassName,
-            functionSignature: methodSignature 
+            functionSignature: methodSignature,
+            queryResult: items
         })
 
         return items
@@ -331,7 +332,8 @@ export class CreateFunction {
             collection: '<COLLECTION_REPLACE>',
             repositoryClassName,
             functionSignature: methodSignature,
-            params: id
+            params: id,
+            queryResult: item
         })
 
         return item

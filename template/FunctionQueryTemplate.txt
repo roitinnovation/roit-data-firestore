@@ -39,7 +39,8 @@
             collection: '<collection_name_replace>',
             repositoryClassName: repositoryClassName,
             functionSignature: methodSignature,
-            params: <params_replace>
+            params: <params_replace>,
+            queryResult: items
         })
 
     return items

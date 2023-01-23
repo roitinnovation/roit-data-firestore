@@ -73,7 +73,8 @@ export class ManualQueryHelper {
                     collection: repositoryOptions.collection,
                     repositoryClassName: className,
                     functionSignature: 'manual-query',
-                    params: JSON.stringify(config)
+                    params: JSON.stringify(config),
+                    queryResult: data
                 })
 
                 return data

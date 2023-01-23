@@ -48,6 +48,8 @@ export class BigQueryFirestoreReadAuditProvider {
             { name: 'repositoryClassName', type: 'STRING' },
             { name: 'functionSignature', type: 'STRING' },
             { name: 'params', type: 'STRING' },
+            { name: 'queryResult', type: 'STRING' },
+            { name: 'queryResultLength', type: 'INTEGER' },
             { name: 'insertAt', type: 'DATETIME' },
         ]
 
@@ -86,16 +88,23 @@ export class BigQueryFirestoreReadAuditProvider {
         collection,
         repositoryClassName,
         functionSignature,
-        params
+        params,
+        queryResult
     }: PersistFirestoreReadProps) {
         try {
             if (!this.tableIsCreated) {
                 await this.createFirestoreAuditDatasetAndTableIfNecessary()
             }
 
+            let queryResultLength = 1
+
+            if (Array.isArray(queryResult)) {
+                queryResultLength = queryResult.length
+            }
+
             this.tableIsCreated = true
         
-            const response = await this.bigQuery
+            await this.bigQuery
                 .dataset(dataset)
                 .table(table)
                 .insert([{
@@ -105,9 +114,10 @@ export class BigQueryFirestoreReadAuditProvider {
                     params, 
                     env: Environment.currentEnv(),
                     insertAt: this.bigQuery.datetime(new Date().toISOString()),
-                    service: Environment.getProperty('service')
+                    service: Environment.getProperty('service'),
+                    queryResult: JSON.stringify(queryResult),
+                    queryResultLength: queryResultLength
                 }])
-            console.log("inserted", response)
         } catch (error) {
             console.log(JSON.stringify(error.errors))
         }
