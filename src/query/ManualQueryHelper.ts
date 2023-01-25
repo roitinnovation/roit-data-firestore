@@ -55,13 +55,13 @@ export class ManualQueryHelper {
             }
 
             if (queryExecute) {
-                const snapshot = await queryExecute.get()
-
                 const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify(config))
-
+                
                 if (result) {
                     return result
                 }
+
+                const snapshot = await queryExecute.get()
 
                 const data = this.getData(snapshot);
                 
