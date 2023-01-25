@@ -10,12 +10,16 @@ export class ManualQueryHelper {
 
     static async executeQueryManual(className: string, config: Config): Promise<Array<any>> {
 
+        const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
+        const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify(config))
+                
+        if (result) {
+            return result
+        }
+
         const repositoryOptions: RepositoryOptions | undefined = QueryPredicateFunctionTransform.classConfig.get(className)
 
-        const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
-
         if (repositoryOptions) {
-
             const firestoreInstance: Firestore = FirestoreInstance.getInstance()
 
             const collection = firestoreInstance.collection(repositoryOptions.collection)
@@ -55,12 +59,6 @@ export class ManualQueryHelper {
             }
 
             if (queryExecute) {
-                const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify(config))
-                
-                if (result) {
-                    return result
-                }
-
                 const snapshot = await queryExecute.get()
 
                 const data = this.getData(snapshot);
