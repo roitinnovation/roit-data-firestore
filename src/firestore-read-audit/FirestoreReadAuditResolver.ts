@@ -37,7 +37,21 @@ export class FirestoreReadAuditResolver {
 
     async persistFirestoreRead(props: PersistFirestoreReadProps) {
         if (this.provider && !this.isReadAuditTimeEnded()) {
-            await this.provider.persistFirestoreRead(props)
+            let queryResultLength = 1
+
+            if (Array.isArray(props.queryResult)) {
+                queryResultLength = props.queryResult.length
+            }
+
+            await this.provider.persistFirestoreRead({
+                ...props,
+                env: Environment.currentEnv(),
+                insertAt: new Date().toISOString().slice(0, -1),
+                projectId: Environment.getProperty('firestore.projectId'),
+                service: Environment.getProperty('service'),
+                queryResult: JSON.stringify(props.queryResult),
+                queryResultLength: queryResultLength
+            })
         }
     }
 

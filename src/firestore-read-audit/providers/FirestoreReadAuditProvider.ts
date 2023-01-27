@@ -1,5 +1,5 @@
-import { PersistFirestoreReadProps } from "../../model/PersistFirestoreReadProps";
+import { PersistFirestoreReadEnrichedProps } from "../../model/PersistFirestoreReadProps";
 
 export interface FirestoreReadAuditProvider {
-    persistFirestoreRead(params: PersistFirestoreReadProps): Promise<void>
+    persistFirestoreRead(params: PersistFirestoreReadEnrichedProps): Promise<void>
 }

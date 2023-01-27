@@ -1,5 +1,5 @@
 import { Env, Environment } from 'roit-environment'
-import { PersistFirestoreReadProps } from '../../model/PersistFirestoreReadProps';
+import { PersistFirestoreReadEnrichedProps } from '../../model/PersistFirestoreReadProps';
 import { PlatformTools } from '../../platform/PlatformTools';
 import { FirestoreReadAuditProvider } from './FirestoreReadAuditProvider';
 
@@ -44,6 +44,7 @@ export class BigQueryFirestoreReadAuditProvider implements FirestoreReadAuditPro
         const schema = [
             { name: 'collection', type: 'STRING' },
             { name: 'service', type: 'STRING' },
+            { name: 'projectId', type: 'STRING' },
             { name: 'env', type: 'STRING' },
             { name: 'repositoryClassName', type: 'STRING' },
             { name: 'functionSignature', type: 'STRING' },
@@ -84,22 +85,10 @@ export class BigQueryFirestoreReadAuditProvider implements FirestoreReadAuditPro
         }
     }
 
-    async persistFirestoreRead({
-        collection,
-        repositoryClassName,
-        functionSignature,
-        params,
-        queryResult
-    }: PersistFirestoreReadProps) {
+    async persistFirestoreRead(props: PersistFirestoreReadEnrichedProps) {
         try {
             if (!this.isTableCreated) {
                 await this.createFirestoreAuditDatasetAndTableIfNecessary()
-            }
-
-            let queryResultLength = 1
-
-            if (Array.isArray(queryResult)) {
-                queryResultLength = queryResult.length
             }
 
             this.isTableCreated = true
@@ -107,17 +96,7 @@ export class BigQueryFirestoreReadAuditProvider implements FirestoreReadAuditPro
             await this.bigQuery
                 .dataset(dataset)
                 .table(table)
-                .insert([{
-                    collection,
-                    repositoryClassName,
-                    functionSignature,
-                    params, 
-                    env: Environment.currentEnv(),
-                    insertAt: this.bigQuery.datetime(new Date().toISOString()),
-                    service: Environment.getProperty('service'),
-                    queryResult: JSON.stringify(queryResult),
-                    queryResultLength: queryResultLength
-                }])
+                .insert([props])
         } catch (error) {
             console.log(JSON.stringify(error.errors))
         }

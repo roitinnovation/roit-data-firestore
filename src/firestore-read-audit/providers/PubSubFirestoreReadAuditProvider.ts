@@ -1,5 +1,5 @@
 import { Environment } from "roit-environment";
-import { PersistFirestoreReadProps } from "../../model/PersistFirestoreReadProps";
+import { PersistFirestoreReadEnrichedProps } from "../../model/PersistFirestoreReadProps";
 import { PlatformTools } from "../../platform/PlatformTools";
 import { FirestoreReadAuditProvider } from "./FirestoreReadAuditProvider";
 
@@ -30,7 +30,7 @@ export class PubSubFirestoreReadAuditProvider implements FirestoreReadAuditProvi
         this.topic = this.pubsub.topic(envTopic, { batching: { maxMessages: 1 } })   
     }
     
-    async persistFirestoreRead(params: PersistFirestoreReadProps): Promise<void> {
+    async persistFirestoreRead(params: PersistFirestoreReadEnrichedProps): Promise<void> {
         const limitBytes = 9900000
         let buffer = Buffer.from(JSON.stringify(params))
         if (buffer.length > limitBytes) {
