@@ -5,8 +5,6 @@ import { FirestoreReadAuditProvider } from "./FirestoreReadAuditProvider";
 
 export class PubSubFirestoreReadAuditProvider implements FirestoreReadAuditProvider {
 
-    private static instance = new PubSubFirestoreReadAuditProvider
-
     private pubsub: any
 
     private topic: any
@@ -26,14 +24,10 @@ export class PubSubFirestoreReadAuditProvider implements FirestoreReadAuditProvi
         const envTopic = Environment.getProperty('firestore.audit.pubSubTopic')
 
         if (!envTopic) {
-            throw new Error(`projectId is required in env.yaml {firestore.audit.pubSubTopic}`)
+            throw new Error(`pubSubTopic is required in env.yaml {firestore.audit.pubSubTopic}`)
         }
 
         this.topic = this.pubsub.topic(envTopic, { batching: { maxMessages: 1 } })   
-    }
-
-    static getInstance() {
-        return this.instance
     }
     
     async persistFirestoreRead(params: PersistFirestoreReadProps): Promise<void> {

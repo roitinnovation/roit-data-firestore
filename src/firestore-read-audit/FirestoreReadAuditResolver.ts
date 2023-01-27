@@ -12,7 +12,7 @@ export class FirestoreReadAuditResolver {
 
     private providersImplMap: Map<string, any> = new Map
 
-    constructor() {
+    private constructor() {
         this.providersImplMap.set('PubSub', PubSubFirestoreReadAuditProvider)
         this.providersImplMap.set('BigQuery', BigQueryFirestoreReadAuditProvider)
 
