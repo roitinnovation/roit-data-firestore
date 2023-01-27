@@ -1,6 +1,6 @@
 {
   "name": "@roit/roit-data-firestore",
-  "version": "0.0.33-alpha.3",
+  "version": "0.0.33-alpha.4",
   "main": "dist/index.js",
   "types": "src/index.ts",
   "scripts": {
@@ -11,6 +11,7 @@
   "author": "Author",
   "devDependencies": {
     "@google-cloud/bigquery": "6.0.3",
+    "@google-cloud/pubsub": "3.3.0",
     "@types/jest": "^27.0.2",
     "@types/node": "^6.0.46",
     "@types/shelljs": "^0.8.9",

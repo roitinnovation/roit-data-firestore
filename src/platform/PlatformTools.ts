@@ -7,7 +7,9 @@ export class PlatformTools {
                 case "redis":
                     return require("redis")
                 case "bigquery":
-                    return require("@google-cloud/bigquery")                    
+                    return require("@google-cloud/bigquery")
+                case "pubsub":
+                    return require("@google-cloud/pubsub")                              
             }
         } catch (err) {
             return require(path.resolve(

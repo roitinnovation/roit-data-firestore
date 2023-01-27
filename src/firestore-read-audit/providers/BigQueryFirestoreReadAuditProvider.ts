@@ -1,19 +1,19 @@
 import { Env, Environment } from 'roit-environment'
-import { RepositorySystemException } from "../../exception/RepositorySystemException";
 import { PersistFirestoreReadProps } from '../../model/PersistFirestoreReadProps';
 import { PlatformTools } from '../../platform/PlatformTools';
+import { FirestoreReadAuditProvider } from './FirestoreReadAuditProvider';
 
 const dataset = 'firestore_read_audit'
 const table = `${dataset}_table`
 
-export class BigQueryFirestoreReadAuditProvider {
+export class BigQueryFirestoreReadAuditProvider implements FirestoreReadAuditProvider {
 
     /**
      * Big Query module instance loaded dynamically
      */
     private bigQuery: any
 
-    private tableIsCreated: boolean = false
+    private isTableCreated: boolean = false
 
     constructor() {
         if (Environment.acceptedEnv(Env.TEST)) return
@@ -22,7 +22,7 @@ export class BigQueryFirestoreReadAuditProvider {
             const projectId = Environment.getProperty("firestore.projectId")
     
             if (!projectId) {
-                throw new RepositorySystemException(`projectId is required in env.yaml {firestore.projectId}`)
+                throw new Error(`projectId is required in env.yaml {firestore.projectId}`)
             }
     
             try {
@@ -32,7 +32,7 @@ export class BigQueryFirestoreReadAuditProvider {
                 })
             } catch (err) {
                 console.error(err)
-                throw new RepositorySystemException(`Error in initializeApp: ${err}`)
+                throw new Error(`Error in initializeApp: ${err}`)
             }
         }
 
@@ -92,7 +92,7 @@ export class BigQueryFirestoreReadAuditProvider {
         queryResult
     }: PersistFirestoreReadProps) {
         try {
-            if (!this.tableIsCreated) {
+            if (!this.isTableCreated) {
                 await this.createFirestoreAuditDatasetAndTableIfNecessary()
             }
 
@@ -102,7 +102,7 @@ export class BigQueryFirestoreReadAuditProvider {
                 queryResultLength = queryResult.length
             }
 
-            this.tableIsCreated = true
+            this.isTableCreated = true
         
             await this.bigQuery
                 .dataset(dataset)

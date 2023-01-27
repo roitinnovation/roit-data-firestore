@@ -1,16 +1,25 @@
 import { Environment } from "roit-environment"
 import { PersistFirestoreReadProps } from "../model/PersistFirestoreReadProps"
 import { BigQueryFirestoreReadAuditProvider } from "./providers/BigQueryFirestoreReadAuditProvider"
+import { FirestoreReadAuditProvider } from "./providers/FirestoreReadAuditProvider"
+import { PubSubFirestoreReadAuditProvider } from "./providers/PubSubFirestoreReadAuditProvider"
 
 export class FirestoreReadAuditResolver {
 
     private static instance: FirestoreReadAuditResolver = new FirestoreReadAuditResolver()
 
-    private provider: BigQueryFirestoreReadAuditProvider
+    private provider: FirestoreReadAuditProvider
+
+    private providersImplMap: Map<string, any> = new Map
 
     constructor() {
-        if (Environment.getProperty('firestore.enableReadAudit') && !this.isReadAuditTimeEnded()) {
-            this.provider = new BigQueryFirestoreReadAuditProvider()
+        this.providersImplMap.set('PubSub', PubSubFirestoreReadAuditProvider)
+        this.providersImplMap.set('BigQuery', BigQueryFirestoreReadAuditProvider)
+
+        if (Environment.getProperty('firestore.audit.enable') && !this.isReadAuditTimeEnded()) {
+            const envProvider = Environment.getProperty('firestore.audit.provider') || 'PubSub'
+            const providerImpl = this.providersImplMap.get(envProvider)
+            this.provider = new providerImpl()
         }
     }
 
@@ -19,7 +28,7 @@ export class FirestoreReadAuditResolver {
     }
 
     private isReadAuditTimeEnded() {
-        const readAuditEndAt = Environment.getProperty('firestore.readAuditEndAt')
+        const readAuditEndAt = Environment.getProperty('firestore.audit.endAt')
         if (readAuditEndAt) {
             return new Date(readAuditEndAt) < new Date()
         }
@@ -27,10 +36,8 @@ export class FirestoreReadAuditResolver {
     }
 
     async persistFirestoreRead(props: PersistFirestoreReadProps) {
-        if (this.provider) {
-            if (!this.isReadAuditTimeEnded()) {
-                await this.provider.persistFirestoreRead(props)
-            }
+        if (this.provider && !this.isReadAuditTimeEnded()) {
+            await this.provider.persistFirestoreRead(props)
         }
     }
 
