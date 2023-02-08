@@ -6,6 +6,7 @@
 
         const db = global.instances.globalDbFile.FirestoreInstance.getInstance()
         const cacheResolver = global.instances.cacheResolver
+        const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver
 
         const environmentUtil = global.instances.environmentUtil
         if(environmentUtil.areWeTesting()) { 
@@ -21,7 +22,6 @@
 
         const collection = db.collection('<collection_name_replace>')
 
-
         if(Number(global.instances.Environment.getProperty('firestore.debug'))) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
         const documentRef = global.instances.queryCreatorConfig.buildPaging(collection, paging)
         const snapshot = await documentRef<query_predicate_replace>.get()
@@ -34,6 +34,14 @@
         })
 
         await cacheResolver.cacheResult(repositoryClassName, methodSignature, items, <params_replace>)
+
+        await firestoreReadAuditResolver.persistFirestoreRead({
+            collection: '<collection_name_replace>',
+            repositoryClassName: repositoryClassName,
+            functionSignature: methodSignature,
+            params: <params_replace>,
+            queryResult: items
+        })
 
     return items
 }

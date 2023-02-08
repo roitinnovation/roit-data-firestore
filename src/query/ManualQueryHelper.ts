@@ -4,17 +4,22 @@ import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransfo
 import { RepositoryOptions } from '../model/RepositoryOptions';
 import { MQuery, MQuerySimple, Config } from '../model/MQuery';
 import { CacheResolver } from "../cache/CacheResolver";
+import { FirestoreReadAuditResolver } from "../firestore-read-audit/FirestoreReadAuditResolver";
 
 export class ManualQueryHelper {
 
     static async executeQueryManual(className: string, config: Config): Promise<Array<any>> {
 
+        const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
+        const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify(config))
+                
+        if (result) {
+            return result
+        }
+
         const repositoryOptions: RepositoryOptions | undefined = QueryPredicateFunctionTransform.classConfig.get(className)
 
-        const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
-
         if (repositoryOptions) {
-
             const firestoreInstance: Firestore = FirestoreInstance.getInstance()
 
             const collection = firestoreInstance.collection(repositoryOptions.collection)
@@ -56,15 +61,20 @@ export class ManualQueryHelper {
             if (queryExecute) {
                 const snapshot = await queryExecute.get()
 
-                const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify(config))
-
-                if (result) {
-                    return result
-                }
-
                 const data = this.getData(snapshot);
                 
                 await cacheResolver.cacheResult(className, 'any', data, JSON.stringify(config))
+
+                const firestoreReadAuditResolver: FirestoreReadAuditResolver = (global as any).instances.firestoreReadAuditResolver
+
+                await firestoreReadAuditResolver.persistFirestoreRead({
+                    collection: repositoryOptions.collection,
+                    repositoryClassName: className,
+                    functionSignature: 'manual-query',
+                    params: JSON.stringify(config),
+                    queryResult: data
+                })
+
                 return data
             }
         }

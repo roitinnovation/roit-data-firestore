@@ -2,6 +2,7 @@ import { Firestore } from "@google-cloud/firestore";
 import { CacheResolver } from "../../cache/CacheResolver";
 import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
 import { RepositoryBusinessException } from "../../exception/RepositoryBusinessException";
+import { FirestoreReadAuditResolver } from "../../firestore-read-audit/FirestoreReadAuditResolver";
 import { Paging } from "../../model/Paging";
 import { EnvironmentUtil } from "../../util/EnvironmentUtil";
 import { QueryCreatorConfig } from "../QueryCreatorConfig";
@@ -285,6 +286,15 @@ export class CreateFunction {
 
         await cacheResolver.cacheResult(repositoryClassName, methodSignature, items, 'Any')
 
+        const firestoreReadAuditResolver: FirestoreReadAuditResolver = (global as any).instances.firestoreReadAuditResolver
+
+        await firestoreReadAuditResolver.persistFirestoreRead({
+            collection: '<COLLECTION_REPLACE>',
+            repositoryClassName,
+            functionSignature: methodSignature,
+            queryResult: items
+        })
+
         return items
     }
 
@@ -315,6 +325,16 @@ export class CreateFunction {
         const item = response.data()
 
         await cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id)
+
+        const firestoreReadAuditResolver: FirestoreReadAuditResolver = (global as any).instances.firestoreReadAuditResolver
+
+        await firestoreReadAuditResolver.persistFirestoreRead({
+            collection: '<COLLECTION_REPLACE>',
+            repositoryClassName,
+            functionSignature: methodSignature,
+            params: id,
+            queryResult: item
+        })
 
         return item
     }

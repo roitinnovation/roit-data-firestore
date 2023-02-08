@@ -249,3 +249,20 @@ export class Repository1 extends BaseRepository<User> {
     }
 }
 ```
+
+## Firestore read auditing with Big Query
+
+GCP Firestore does not provide a way to visualize the number of reads per collection, so with this functionality it is possible to save all the reads of a Firestore collection into a BigQuery table or dispatch to a PubSub topic for further analysis.
+
+Example (using env.yaml):
+
+```
+firestore:
+    projectId: 'gcp-project-id'
+    audit:
+        enable: true
+        endAt: '2023-01-19 15:02:10' (optional - after this date, the audit will stop)
+        provider: 'PubSub' // PubSub or BigQuery (PubSub is the default option)
+        pubSubTopic: 'your-topic'
+```
+
