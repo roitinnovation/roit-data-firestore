@@ -38,9 +38,14 @@ export class PubSubFirestoreReadAuditProvider implements FirestoreReadAuditProvi
             buffer = Buffer.from(JSON.stringify(params))
         }
         
-        await this.topic.publishMessage({
-            data: buffer
-        })
+        try {
+            await this.topic.publishMessage({
+                data: buffer
+            })
+        } catch (error) {
+            console.log(JSON.stringify(error))
+        }
+        
     }
 
     private loadPubSub(): any {
