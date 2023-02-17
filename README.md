@@ -117,7 +117,7 @@ export abstract class ReadonlyRepository<T> {
 
 ```
 
-## Dynamic query contructor
+## Dynamic query contractor
 The dynamic construction of a query allows a method to be described in a standardized way and the library dynamically creates the concrete implementation
 
 Ref: [Firstore Operators](https://firebase.google.com/docs/firestore/query-data/queries)
@@ -156,7 +156,7 @@ findByNameAndAge: (name: string, age: number) => Promise<Array<User>>
 findByNameAndAgeAndOrderByIdDesc: (name: string, age: number) => Promise<Array<User>>
 ```
 
-## Paging suport
+## Paging support
 
 For any query it is possible to pass the paging information
 
@@ -172,7 +172,7 @@ limit: number = 1000
 
 ```
 
-#### Exemple
+#### Example
 
 ```
 Any query
@@ -247,6 +247,20 @@ export class Repository1 extends BaseRepository<User> {
     findByNameAndId2(name: string, id: string): Promise<Array<User>> {
         return this.query([{ name }, { id }])
     }
+}
+```
+
+#### Select Example
+
+```
+@Query({ select: ['name', 'id'] })
+findByName: (name: string) => Promise<Array<User>>
+
+findByNameAndId(name: string, id: string): Promise<Array<User>> {
+    return this.query({
+        query:[{name}, {id}],
+        select: ['name']
+    })
 }
 ```
 
