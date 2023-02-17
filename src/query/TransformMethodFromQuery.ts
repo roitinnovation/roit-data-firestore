@@ -1,10 +1,11 @@
+import { QueryOptions } from "../decorators/Query"
 import { QueryPredicate } from "../model/QueryPredicate"
 import { operatorMap } from "./operator/OperatorMap"
 
 export class TransformMethodFromQuery {
 
 
-    static extractQuery(methodSignature: string): Array<QueryPredicate> {
+    static extractQuery(methodSignature: string, queryOptions?: QueryOptions): Array<QueryPredicate> {
 
         methodSignature = methodSignature.replace('findBy', '')
 
@@ -13,7 +14,7 @@ export class TransformMethodFromQuery {
         const queryOperator: Array<QueryPredicate> = seperadorArray.map(part => {
 
             const operators = Array.from(operatorMap.keys()).filter(ope => part.includes(ope))
-            
+
             const opertorMaxLength = Math.max(...operators.map(opt => opt.length))
             const operator = operators.find(opt => opt.length == opertorMaxLength) || 'Iqual'
 
@@ -26,6 +27,14 @@ export class TransformMethodFromQuery {
 
             return predicate
         })
+
+        if (queryOptions && queryOptions.select) {
+            queryOperator.push({
+                attribute: 'non',
+                operator: `.select(${queryOptions.select.map(itm => `'${itm}'`).join(',')})`,
+                operatorKey: 'Select'
+            })
+        }
 
         return queryOperator
     }

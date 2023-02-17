@@ -12,7 +12,7 @@ export class ManualQueryHelper {
 
         const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
         const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify(config))
-                
+
         if (result) {
             return result
         }
@@ -48,6 +48,14 @@ export class ManualQueryHelper {
                 })
             }
 
+            if (config && config?.select) {
+                if (queryExecute) {
+                    queryExecute = queryExecute.select(...config.select)
+                } else {
+                    queryExecute = collection.select(...config.select)
+                }
+            }
+
 
             if (config && config?.orderBy) {
                 if (queryExecute) {
@@ -55,14 +63,13 @@ export class ManualQueryHelper {
                 } else {
                     queryExecute = collection.orderBy(config.orderBy.field, config.orderBy.direction)
                 }
-
             }
 
             if (queryExecute) {
                 const snapshot = await queryExecute.get()
 
                 const data = this.getData(snapshot);
-                
+
                 await cacheResolver.cacheResult(className, 'any', data, JSON.stringify(config))
 
                 const firestoreReadAuditResolver: FirestoreReadAuditResolver = (global as any).instances.firestoreReadAuditResolver

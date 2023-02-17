@@ -19,6 +19,9 @@ export class Repository1 extends BaseRepository<User> {
     @Query()
     findByName: (name: string) => Promise<Array<User>>
 
+    @Query({ select: ['name'] })
+    findByAge: (age: number) => Promise<Array<User>>
+
     @Query()
     findByNameAndAge: (name: string, age: number, paging?: Paging) => Promise<Array<User>>
 
