@@ -18,6 +18,8 @@ export class Config {
     orderBy?: OrderBy
 
     query?: Array<MQuery | MQuerySimple>
+
+    select?: Array<string> = []
 }
 
 export class OrderBy {
