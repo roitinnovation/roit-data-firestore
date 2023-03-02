@@ -23,8 +23,10 @@
         const collection = db.collection('<collection_name_replace>')
 
         if(Number(global.instances.Environment.getProperty('firestore.debug'))) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
-        const documentRef = global.instances.queryCreatorConfig.buildPaging(collection, paging)
-        const snapshot = await documentRef<query_predicate_replace>.get()
+
+        let collectionRef = collection<query_predicate_replace>
+        collectionRef = global.instances.queryCreatorConfig.buildPaging(collectionRef, paging)
+        const snapshot = await collectionRef.get()
 
         let items = []
         snapshot.forEach(doc => { 

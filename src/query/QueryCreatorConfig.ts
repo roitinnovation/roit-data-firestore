@@ -12,11 +12,11 @@ export class QueryCreatorConfig {
 
         let documentRef: Query<DocumentData> = collectionRef.limit(limit)
 
-        if(orderBy) {
+        if (orderBy) {
             documentRef = documentRef.orderBy(orderBy, orderByDirection)
         }
 
-        if(startAfter) {
+        if (startAfter) {
             documentRef= documentRef.startAfter(startAfter)
         }
 
