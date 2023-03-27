@@ -1,11 +1,11 @@
 
 export class Paging {
 
-    orderBy?: string = 'id'
+    orderBy?: string | string[] = 'id'
 
     orderByDirection?: Direction = 'asc'
 
-    cursor?: string | null = null
+    cursor?: string | string[] | null = null
 
     limit: number = 1000
 }
