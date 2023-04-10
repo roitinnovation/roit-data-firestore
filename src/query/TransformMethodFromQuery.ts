@@ -11,7 +11,7 @@ export class TransformMethodFromQuery {
 
         const seperadorArray = methodSignature.split('And')
 
-        const queryOperator: Array<QueryPredicate> = seperadorArray.map(part => {
+        const queryOperator: Array<QueryPredicate> = seperadorArray.map((part, index) => {
 
             const operators = Array.from(operatorMap.keys()).filter(ope => part.includes(ope))
 
@@ -21,18 +21,22 @@ export class TransformMethodFromQuery {
             const operatorConfig = operatorMap.get(operator)
 
             const predicate = new QueryPredicate
-            predicate.attribute = this.lowerCamelCase(operatorConfig?.extractOperator ? operatorConfig?.extractOperator(part) : part.replace(operator, ''))
+            const attribute = this.lowerCamelCase(operatorConfig?.extractOperator ? operatorConfig?.extractOperator(part) : part.replace(operator, ''))
+            predicate.attribute = attribute
             predicate.operator = operatorConfig?.predicate(part)
             predicate.operatorKey = operator
+            predicate.paramContent = `${attribute}${index}`
 
             return predicate
         })
 
         if (queryOptions && queryOptions.select) {
+            const selectOperator = `.select(${queryOptions.select.map(itm => `'${itm}'`).join(',')})`
             queryOperator.push({
                 attribute: 'non',
-                operator: `.select(${queryOptions.select.map(itm => `'${itm}'`).join(',')})`,
-                operatorKey: 'Select'
+                operator: selectOperator,
+                operatorKey: 'Select',
+                paramContent: selectOperator
             })
         }
 
