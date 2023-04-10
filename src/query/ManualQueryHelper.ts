@@ -5,6 +5,7 @@ import { RepositoryOptions } from '../model/RepositoryOptions';
 import { MQuery, MQuerySimple, Config } from '../model/MQuery';
 import { CacheResolver } from "../cache/CacheResolver";
 import { FirestoreReadAuditResolver } from "../firestore-read-audit/FirestoreReadAuditResolver";
+import { QueryCreatorConfig } from "./QueryCreatorConfig";
 
 export class ManualQueryHelper {
 
@@ -66,6 +67,9 @@ export class ManualQueryHelper {
             }
 
             if (queryExecute) {
+                if (config?.paging) {
+                    queryExecute = new QueryCreatorConfig().buildPaging(queryExecute, config.paging)
+                }
                 const snapshot = await queryExecute.get()
 
                 const data = this.getData(snapshot);
