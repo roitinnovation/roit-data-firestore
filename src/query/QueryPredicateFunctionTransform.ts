@@ -76,12 +76,14 @@ export class QueryPredicateFunctionTransform {
 
         let functionBuilder = templateFun
 
+        const getAttribute = (queryPredicate: QueryPredicate) => queryPredicate.paramContent ?? queryPredicate.attribute 
+
         functionBuilder = functionBuilder.replace(/<repositoryClassName_value>/g, repositoryClassName)
         functionBuilder = functionBuilder.replace(/<methodSignature_value>/g, methodSignature)
-        functionBuilder = functionBuilder.replace(/<params_replace>/g, parameters.map(att => att.attribute).join(','))
-        functionBuilder = functionBuilder.replace(/<params_validator_replace>/g, parameters.filter(par => par.attribute != 'paging').map(att => `!${att.attribute}`).join('||'))
+        functionBuilder = functionBuilder.replace(/<params_replace>/g, parameters.map(att => getAttribute(att)).join(','))
+        functionBuilder = functionBuilder.replace(/<params_validator_replace>/g, parameters.filter(par => par.attribute != 'paging').map(att => `!${getAttribute(att)}`).join('||'))
         functionBuilder = functionBuilder.replace(/<collection_name_replace>/g, options.collection)
-        functionBuilder = functionBuilder.replace(/<query_predicate_replace>/g, queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', att.attribute)}`).join(''))
+        functionBuilder = functionBuilder.replace(/<query_predicate_replace>/g, queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', getAttribute(att))}`).join(''))
 
         return Function(`return ${functionBuilder}`)()
     }
