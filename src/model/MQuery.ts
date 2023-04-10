@@ -1,4 +1,5 @@
 import { OrderByDirection } from "@google-cloud/firestore";
+import { Paging } from "./Paging";
 
 export class MQuery {
 
@@ -20,6 +21,8 @@ export class Config {
     query?: Array<MQuery | MQuerySimple>
 
     select?: Array<string> = []
+
+    paging?: Paging
 }
 
 export class OrderBy {
