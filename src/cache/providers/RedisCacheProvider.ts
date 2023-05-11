@@ -25,6 +25,12 @@ export class RedisCacheProvider implements CacheProvider {
                 return
             }
 
+            const isJest = typeof jest !== 'undefined'
+
+            if (isJest) {
+                return
+            }
+
             this.redis = this.loadRedis()
 
             this.client = this.redis.createClient({ url })
