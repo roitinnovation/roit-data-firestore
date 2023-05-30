@@ -1,7 +1,7 @@
 import { Firestore } from "@google-cloud/firestore";
 import { CacheResolver } from "../../cache/CacheResolver";
-import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
 import { RepositoryBusinessException } from "../../exception/RepositoryBusinessException";
+import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
 import { FirestoreReadAuditResolver } from "../../firestore-read-audit/FirestoreReadAuditResolver";
 import { Paging } from "../../model/Paging";
 import { EnvironmentUtil } from "../../util/EnvironmentUtil";
@@ -337,5 +337,30 @@ export class CreateFunction {
         })
 
         return item
+    }
+
+    async incrementField(id: string, field: string, increment?: number): Promise<void> {
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        const fieldValueIncrement = (global as any).instances.fieldValueIncrement
+
+        const document = db.collection('<COLLECTION_REPLACE>').doc(id)
+
+        try {
+            if (!environmentUtil.areWeTesting()) {
+
+                let payload: any = {}
+                payload[field] = fieldValueIncrement(increment || 1)
+
+                await document.set(payload, { merge: true })
+
+                await this.revokeCache()
+            } else {
+                console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            }
+        } catch (e) {
+            console.error(e?.details)
+        }
     }
 }

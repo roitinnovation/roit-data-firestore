@@ -40,11 +40,14 @@ export class Repository1 extends BaseRepository<User> {
     @Query()
     findByName: (name: string) => Promise<Array<User>>
 
-    @Query()
-    findByNameAndAge: (name: string, age: number, paging?: Paging) => Promise<Array<User>>
+    @Query({ oneRow: true })
+    findByNameAndAge: (name: string, age: number, paging?: Paging) => Promise<User | undefined>
 
     @Query()
     findByNameAndAgeAndOrderByIdDesc: (name: string, age: number) => Promise<Array<User>>
+
+    @Query({ select: ['name', 'age'] })
+    findByAge: (age: number) => Promise<Array<User>>
 }
 ```
 ## Decorators
@@ -92,7 +95,7 @@ export abstract class BaseRepository<T> {
     findAll: (paging?: Paging) => Promise<T[]>
 
     @Query()
-    findById: (id: string) => Promise<T> | undefined
+    findById: (id: Required<string>) => Promise<T | undefined>
 
     @Query()
     create: (item: T | Array<T>) => Promise<Array<T>>
@@ -101,7 +104,16 @@ export abstract class BaseRepository<T> {
     update: (items: T | Array<T>) => Promise<Array<T>>
 
     @Query()
+    createOrUpdate: (items: T | Array<T>) => Promise<Array<T>>
+
+    @Query()
+    updatePartial: (id: Required<string>, itemPartial: Partial<T>) => Promise<void>
+
+    @Query()
     delete: (id: Required<string> | Array<string>) => Promise<Array<string>>
+
+    @Query()
+    incrementField: (id: Required<string>, field: Required<string>, increment?: number) => Promise<void>
 }
 
 When you only need to read a collection, use ReadonlyRepository

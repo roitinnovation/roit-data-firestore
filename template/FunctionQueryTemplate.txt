@@ -45,5 +45,9 @@
             queryResult: items
         })
 
-    return items
+        if(<is_one_row>) {
+            return items[0]
+        }        
+
+        return items
 }

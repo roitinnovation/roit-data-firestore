@@ -3,6 +3,7 @@ import { ClassMethodQueryMap } from "../config/ClassMethodQueryMap";
 
 export class QueryOptions {
   select?: Array<string> = []
+  oneRow?: boolean = false
 }
 
 export function Query(options?: QueryOptions) {

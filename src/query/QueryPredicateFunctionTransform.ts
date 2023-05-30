@@ -7,6 +7,8 @@ import { RepositoryOptions } from "../model/RepositoryOptions";
 import { EnvironmentUtil } from '../util/EnvironmentUtil';
 import { CreateFunction } from "./operator/CreateFunction";
 import { QueryCreatorConfig } from './QueryCreatorConfig';
+import { QueryOptions } from '../decorators/Query';
+import { FieldValue } from '@google-cloud/firestore';
 const firestore = require('../config/FirestoreInstance')
 const dateRef = require('@roit/roit-date')
 const classValidator = require('class-validator')
@@ -23,7 +25,7 @@ export class QueryPredicateFunctionTransform {
     public static schemaRegister: Map<string, any> = new Map
     public static classConfig: Map<string, RepositoryOptions> = new Map
 
-    static createFunction(queryPredicate: Array<QueryPredicate>, methodSignature: string, repositoryClassName: string, options: RepositoryOptions): Function {
+    static createFunction(queryPredicate: Array<QueryPredicate>, methodSignature: string, repositoryClassName: string, options: RepositoryOptions, methodQueryOptions?: QueryOptions): Function {
 
         (global as any).instances = {
             globalDbFile: firestore,
@@ -35,7 +37,8 @@ export class QueryPredicateFunctionTransform {
             queryCreatorConfig: new QueryCreatorConfig,
             cacheResolver: CacheResolver.getInstance(),
             environmentUtil: new EnvironmentUtil,
-            firestoreReadAuditResolver: FirestoreReadAuditResolver.getInstance()
+            firestoreReadAuditResolver: FirestoreReadAuditResolver.getInstance(),
+            fieldValueIncrement: FieldValue.increment
         }
 
         if (!options?.collection) {
@@ -76,7 +79,7 @@ export class QueryPredicateFunctionTransform {
 
         let functionBuilder = templateFun
 
-        const getAttribute = (queryPredicate: QueryPredicate) => queryPredicate.paramContent ?? queryPredicate.attribute 
+        const getAttribute = (queryPredicate: QueryPredicate) => queryPredicate.paramContent ?? queryPredicate.attribute
 
         functionBuilder = functionBuilder.replace(/<repositoryClassName_value>/g, repositoryClassName)
         functionBuilder = functionBuilder.replace(/<methodSignature_value>/g, methodSignature)
@@ -84,6 +87,8 @@ export class QueryPredicateFunctionTransform {
         functionBuilder = functionBuilder.replace(/<params_validator_replace>/g, parameters.filter(par => par.attribute != 'paging').map(att => `!${getAttribute(att)}`).join('||'))
         functionBuilder = functionBuilder.replace(/<collection_name_replace>/g, options.collection)
         functionBuilder = functionBuilder.replace(/<query_predicate_replace>/g, queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', getAttribute(att))}`).join(''))
+        functionBuilder = functionBuilder.replace(/<is_one_row>/g, methodQueryOptions?.oneRow || false)
+
 
         return Function(`return ${functionBuilder}`)()
     }

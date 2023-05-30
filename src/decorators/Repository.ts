@@ -30,7 +30,7 @@ export function Repository(options: RepositoryOptions) {
         methods.forEach(propertyKey => {
             const queryOptions = ClassMethodQueryMap.getInstance().getMethodConfig(className, propertyKey)
             const queryOperator = TransformMethodFromQuery.extractQuery(propertyKey, queryOptions)
-            constructor.prototype[propertyKey] = QueryPredicateFunctionTransform.createFunction(queryOperator, propertyKey, className, options)
+            constructor.prototype[propertyKey] = QueryPredicateFunctionTransform.createFunction(queryOperator, propertyKey, className, options, queryOptions)
         })
     }
 }
