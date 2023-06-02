@@ -67,6 +67,7 @@ export class ManualQueryHelper {
             }
 
             if (queryExecute) {
+
                 if (config?.paging) {
                     queryExecute = new QueryCreatorConfig().buildPaging(queryExecute, config.paging)
                 }
