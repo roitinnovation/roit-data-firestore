@@ -1,4 +1,5 @@
 import { Query } from "../decorators/Query";
+import { QueryResult } from "../model";
 import { Config } from '../model/MQuery';
 import { Paging } from "../model/Paging";
 import { ManualQueryHelper } from '../query/ManualQueryHelper';
@@ -54,5 +55,10 @@ export abstract class BaseRepository<T> {
     async query(config: Config): Promise<T[]> {
         const className = this.constructor.prototype.constructor.name
         return ManualQueryHelper.executeQueryManual(className, config)
+    }
+
+    async queryWithCount(config: Config): Promise<QueryResult<T>> {
+        const className = this.constructor.prototype.constructor.name
+        return ManualQueryHelper.executeQueryManualWithCount(className, config)
     }
 }
