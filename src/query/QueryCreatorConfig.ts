@@ -1,15 +1,16 @@
 import { CollectionReference, DocumentData, Query } from "@google-cloud/firestore";
 import { Paging } from "../model/Paging";
+import { Options } from "../model";
 
 export class QueryCreatorConfig {
 
-    async buildPaging(collectionRef: CollectionReference<DocumentData>, paging?: Paging): 
+    async buildPaging(collectionRef: CollectionReference<DocumentData>, paging?: Paging, options?: Options): 
         Promise<{ documentRef: Query<DocumentData>; totalItens: number | null }> {
         const orderByDirection = paging?.orderByDirection || 'asc'
         const limit = paging?.limit ?? 1000
         let totalItens: number | null = null
 
-        if (paging?.showCount) {
+        if (options?.showCount) {
             const itensQuery = await collectionRef.count().get()
             totalItens = itensQuery.data().count
         }
@@ -23,7 +24,10 @@ export class QueryCreatorConfig {
             )
         }
 
-        if (paging?.cursor) {
+        if (paging?.page) {
+            documentRef = documentRef.offset(paging.limit * (paging?.page - 1))
+        }
+        else if (paging?.cursor) {
             const startAfter = Array.isArray(paging.cursor) ? paging.cursor : [paging.cursor]
             documentRef = documentRef.startAfter(...startAfter)
         }
