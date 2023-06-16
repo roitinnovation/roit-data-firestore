@@ -57,8 +57,8 @@ export abstract class BaseRepository<T> {
         return ManualQueryHelper.executeQueryManual(className, config)
     }
 
-    async queryWithCount(config: Config): Promise<QueryResult<T>> {
+    async queryPaginated(config: Config): Promise<QueryResult<T>> {
         const className = this.constructor.prototype.constructor.name
-        return ManualQueryHelper.executeQueryManualWithCount(className, config)
+        return ManualQueryHelper.executeQueryManualPaginated(className, config)
     }
 }
