@@ -25,8 +25,8 @@
         if(Number(global.instances.Environment.getProperty('firestore.debug'))) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
 
         let collectionRef = collection<query_predicate_replace>
-        collectionRef = global.instances.queryCreatorConfig.buildPaging(collectionRef, paging)
-        const snapshot = await collectionRef.get()
+        let { documentRef } = await global.instances.queryCreatorConfig.buildPaging(collectionRef, paging, { showCount: false })
+        const snapshot = await documentRef.get()
 
         let items = []
         snapshot.forEach(doc => { 
