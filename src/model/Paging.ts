@@ -9,7 +9,7 @@ export class Paging {
 
     limit: number = 1000
 
-    showCount?: boolean = false
+    page?: number = 0
 }
 
 export type Direction = 'desc' | 'asc'
