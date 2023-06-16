@@ -2,17 +2,26 @@ import { Firestore } from "@google-cloud/firestore";
 import { FirestoreInstance } from '../config/FirestoreInstance';
 import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
 import { RepositoryOptions } from '../model/RepositoryOptions';
-import { MQuery, MQuerySimple, Config } from '../model/MQuery';
+import { MQuery, MQuerySimple, Config, Options } from '../model/MQuery';
 import { CacheResolver } from "../cache/CacheResolver";
 import { FirestoreReadAuditResolver } from "../firestore-read-audit/FirestoreReadAuditResolver";
 import { QueryCreatorConfig } from "./QueryCreatorConfig";
+import { QueryResult } from "../model";
 
 export class ManualQueryHelper {
 
     static async executeQueryManual(className: string, config: Config): Promise<Array<any>> {
+        const { data } = await this.handleExecuteQueryManual(className, config, { showCount: false })
+        return data
+    }
+    
+    static async executeQueryManualPaginated(className: string, config: Config): Promise<QueryResult> {
+        return this.handleExecuteQueryManual(className, config, { showCount: true })
+    }
 
+    static async handleExecuteQueryManual(className: string, config: Config, options: Options): Promise<QueryResult> {
         const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
-        const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify(config))
+        const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify({...config, showCount: options?.showCount || false }))
 
         if (result) {
             return result
@@ -45,7 +54,7 @@ export class ManualQueryHelper {
                 queryList.shift()
 
                 queryList.forEach(que => {
-                    queryExecute = queryExecute.where(que.field, que.operator, que.value)
+                    queryExecute = queryExecute!.where(que.field, que.operator, que.value)
                 })
             }
 
@@ -67,9 +76,12 @@ export class ManualQueryHelper {
             }
 
             if (queryExecute) {
+                let count: number | null = null;
 
                 if (config?.paging) {
-                    queryExecute = new QueryCreatorConfig().buildPaging(queryExecute, config.paging)
+                    const { documentRef, totalItens } = await new QueryCreatorConfig().buildPaging(queryExecute, config.paging, options)
+                    queryExecute = documentRef
+                    count = totalItens
                 }
                 const snapshot = await queryExecute.get()
 
@@ -87,11 +99,18 @@ export class ManualQueryHelper {
                     queryResult: data
                 })
 
-                return data
+                return {
+                    data, 
+                    totalItens: count
+                }
+                
             }
         }
 
-        return []
+        return   {
+            data: [], 
+            totalItens: 0
+        }
     }
 
     private static convertToMQuery(query: MQuerySimple): MQuery {
@@ -104,9 +123,9 @@ export class ManualQueryHelper {
         return mQueryBuilder
     }
 
-    private static getData(snapshot: any) {
+    private static getData<T = any>(snapshot: any) {
 
-        let items: Array<any> = []
+        let items: Array<T> = []
 
         try {
             snapshot.forEach((doc: any) => {

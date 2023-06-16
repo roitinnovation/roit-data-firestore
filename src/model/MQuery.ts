@@ -31,3 +31,7 @@ export class OrderBy {
 
     direction: OrderByDirection = 'asc'
 }
+
+export class Options {
+    showCount: boolean
+}

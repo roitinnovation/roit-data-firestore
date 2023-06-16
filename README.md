@@ -180,6 +180,8 @@ orderByDirection?: Direction = 'asc'
 
 cursor?: string | null = null
 
+page?: number = 0
+
 limit: number = 1000
 
 ```
@@ -260,6 +262,42 @@ export class Repository1 extends BaseRepository<User> {
         return this.query([{ name }, { id }])
     }
 }
+```
+
+#### Paginated Query
+
+
+```
+
+Use queryPaginated() method preset in BaseRepository
+
+
+findByNameAndId(name: string, id: string, paging: Paging): Promise<QueryResult<User>> {
+    return this.queryPaginated({
+        query: [
+            {
+                field: 'name',
+                operator: '==',
+                value: name
+            },
+            {
+                field: 'id',
+                operator: '==',
+                value: id
+            }
+        ],
+        paging
+    })
+}
+
+You can specify a cursor or a page in the Paging class. 
+The return of this method is a QueryResult:
+
+class QueryResult<T = any> {
+    data: T[];
+    totalItens: number | null;
+}
+
 ```
 
 #### Select Example
