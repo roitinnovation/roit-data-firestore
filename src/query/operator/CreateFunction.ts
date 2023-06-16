@@ -274,7 +274,7 @@ export class CreateFunction {
             return []
         }
 
-        let { documentRef } = await queryCreatorConfig.buildPaging(collection, paging)
+        let { documentRef } = await queryCreatorConfig.buildPaging(collection, paging, { showCount: false })
         const snapshot = await documentRef.get()
 
         let items: Array<any> = new Array
