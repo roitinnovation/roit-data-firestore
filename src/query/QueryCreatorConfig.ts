@@ -23,11 +23,8 @@ export class QueryCreatorConfig {
                 documentRef = documentRef.orderBy(order, orderByDirection)
             )
         }
-
-        if (paging?.page) {
-            documentRef = documentRef.offset(paging.limit * (paging?.page - 1))
-        }
-        else if (paging?.cursor) {
+        
+        if (paging?.cursor) {
             const startAfter = Array.isArray(paging.cursor) ? paging.cursor : [paging.cursor]
             documentRef = documentRef.startAfter(...startAfter)
         }

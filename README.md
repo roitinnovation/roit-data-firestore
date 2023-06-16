@@ -180,8 +180,6 @@ orderByDirection?: Direction = 'asc'
 
 cursor?: string | null = null
 
-page?: number = 0
-
 limit: number = 1000
 
 ```
@@ -290,7 +288,6 @@ findByNameAndId(name: string, id: string, paging: Paging): Promise<QueryResult<U
     })
 }
 
-You can specify a cursor or a page in the Paging class. 
 The return of this method is a QueryResult:
 
 class QueryResult<T = any> {
