@@ -25,6 +25,8 @@ export class CreateFunction {
 
         let modelName = ''
         let validatorOptions
+        let ttlExpirationIn
+        let ttlUnit
 
         if (!Array.isArray(items)) {
             items = [items]
@@ -38,6 +40,7 @@ export class CreateFunction {
         const { newDate } = (global as any).instances.dateRef
         const uuid = (global as any).instances.uuid
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        const getTtlTimestamp = (global as any).instances.getTtlTimestamp
 
         const collection = db.collection('<COLLECTION_REPLACE>')
 
@@ -50,6 +53,10 @@ export class CreateFunction {
 
             if (!item.id) {
                 item.id = uuid();
+            }
+
+            if(ttlExpirationIn && ttlUnit) {
+                item.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit)
             }
 
             if (!item.createAt) {
@@ -111,6 +118,9 @@ export class CreateFunction {
 
         let modelName = ''
         let validatorOptions
+        let ttlExpirationIn
+        let ttlUnit
+        let ttlUpdate
 
         if (!Array.isArray(items)) {
             items = [items]
@@ -123,6 +133,7 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const { newDate } = (global as any).instances.dateRef
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        const getTtlTimestamp = (global as any).instances.getTtlTimestamp
 
         const collection = db.collection('<COLLECTION_REPLACE>')
 
@@ -140,6 +151,10 @@ export class CreateFunction {
 
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
+
+            if(ttlExpirationIn && ttlUnit && ttlUpdate) {
+                item.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit)
+            }
 
             item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
 
@@ -162,6 +177,8 @@ export class CreateFunction {
 
         let modelName = ''
         let validatorOptions
+        let ttlExpirationIn
+        let ttlUnit
 
         if (!Array.isArray(items)) {
             items = [items]
@@ -175,6 +192,7 @@ export class CreateFunction {
         const { newDate } = (global as any).instances.dateRef
         const uuid = (global as any).instances.uuid
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        const getTtlTimestamp = (global as any).instances.getTtlTimestamp
 
         const collection = db.collection('<COLLECTION_REPLACE>')
 
@@ -196,6 +214,10 @@ export class CreateFunction {
 
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
+
+            if(ttlExpirationIn && ttlUnit) {
+                item.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit)
+            }
 
             item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
 

@@ -16,6 +16,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "strictPropertyInitialization": false,
+        "lib": ["dom", "es2018"],
     },
     "include": [
         "src/**/*.ts",

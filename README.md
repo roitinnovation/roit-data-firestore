@@ -327,3 +327,18 @@ firestore:
         pubSubTopic: 'your-topic'
 ```
 
+## TTL Option
+Firestore supports automatic data cleaning
+```
+@Repository({
+    collection: `collection`,
+    validateModel: Model,
+    ttl: {
+        expirationIn: 3,
+        unit: 'days',
+        ttlUpdate: false
+    }
+})
+
+in data document there is create attribute ttlExpirationAt
+```

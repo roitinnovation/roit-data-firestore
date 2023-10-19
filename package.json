@@ -1,6 +1,6 @@
 {
     "name": "@roit/roit-data-firestore",
-    "version": "0.1.2",
+    "version": "1.0.7",
     "main": "dist/index.js",
     "types": "src/index.ts",
     "scripts": {
@@ -24,7 +24,7 @@
     },
     "dependencies": {
         "@google-cloud/firestore": "6.5.0",
-        "@roit/roit-date": "1.7.0",
+        "@roit/roit-date": "1.8.1",
         "class-validator": "0.13.0",
         "class-validator-jsonschema": "^3.1.0",
         "firebase": "^9.2.0",
@@ -32,7 +32,8 @@
         "reflect-metadata": "0.1.13",
         "roit-environment": "1.1.2",
         "shelljs": "^0.8.4",
-        "uuid": "^8.3.2"
+        "uuid": "^8.3.2",
+        "date-fns": "2.30.0"
     },
     "repository": {
         "type": "git",

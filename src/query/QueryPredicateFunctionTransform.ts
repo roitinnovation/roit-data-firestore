@@ -9,6 +9,7 @@ import { CreateFunction } from "./operator/CreateFunction";
 import { QueryCreatorConfig } from './QueryCreatorConfig';
 import { QueryOptions } from '../decorators/Query';
 import { FieldValue } from '@google-cloud/firestore';
+import { TtlBuilderUtil } from '../util/TtlBuilderUtil';
 const firestore = require('../config/FirestoreInstance')
 const dateRef = require('@roit/roit-date')
 const classValidator = require('class-validator')
@@ -38,7 +39,8 @@ export class QueryPredicateFunctionTransform {
             cacheResolver: CacheResolver.getInstance(),
             environmentUtil: new EnvironmentUtil,
             firestoreReadAuditResolver: FirestoreReadAuditResolver.getInstance(),
-            fieldValueIncrement: FieldValue.increment
+            fieldValueIncrement: FieldValue.increment,
+            getTtlTimestamp: TtlBuilderUtil.getTtlTimestamp
         }
 
         if (!options?.collection) {
@@ -70,6 +72,13 @@ export class QueryPredicateFunctionTransform {
                 .replace("let validatorOptions", `let validatorOptions = ${options?.validatorOptions ? JSON.stringify(options?.validatorOptions) : undefined}`)
                 .replace("let repositoryClassName = ''", `let repositoryClassName = '${repositoryClassName}'`)
                 .replace("let methodSignature = ''", `let methodSignature = '${methodSignature}'`)
+                
+                if(options?.ttl) {
+                    functionString = functionString.replace("let ttlExpirationIn", `let ttlExpirationIn = ${options?.ttl.expirationIn}`)
+                    functionString = functionString.replace("let ttlUnit", `let ttlUnit = '${options?.ttl.unit}'`)
+                    functionString = functionString.replace("let ttlUpdate", `let ttlUpdate = ${options?.ttl.ttlUpdate}`)
+                }
+
             functionString = this.removeLast(functionString, '});')
             return Function(`return ${functionString}`)()
         }
