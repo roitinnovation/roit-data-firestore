@@ -31,9 +31,9 @@ export class ValidatorDataHandle {
         })
         return constraintsList
     }
-    
+
     extractConstraints(error: ValidationError, ancestor: string, constraintsList: Array<any>) {
-        if(!error.children.length) {
+        if(!error?.children?.length) {
             const constraints = error.constraints as any
             constraintsList.push(
                 {
@@ -42,7 +42,7 @@ export class ValidatorDataHandle {
                 }
             )
         } else {
-            error.children.forEach(err => {
+            error?.children?.forEach(err => {
                 this.extractConstraints(err, `${ancestor}.${err.property}`, constraintsList)
             })
         }
