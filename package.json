@@ -1,6 +1,6 @@
 {
     "name": "@roit/roit-data-firestore",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "main": "dist/index.js",
     "types": "src/index.ts",
     "scripts": {
@@ -25,8 +25,8 @@
     "dependencies": {
         "@google-cloud/firestore": "6.5.0",
         "@roit/roit-date": "1.10.4",
-        "class-validator": "0.13.0",
-        "class-validator-jsonschema": "^3.1.0",
+        "class-validator": "0.14.0",
+        "class-validator-jsonschema": "5.0.0",
         "date-fns": "2.30.0",
         "firebase": "^9.2.0",
         "node-cache": "5.1.2",
