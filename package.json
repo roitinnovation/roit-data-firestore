@@ -24,7 +24,7 @@
     },
     "dependencies": {
         "@google-cloud/firestore": "6.5.0",
-        "@roit/roit-date": "1.10.4",
+        "@roit/roit-date": "1.10.5",
         "class-validator": "0.14.0",
         "class-validator-jsonschema": "5.0.0",
         "date-fns": "2.30.0",
