@@ -12,7 +12,7 @@ export class FirestoreInstance {
 
         if(Environment.acceptedEnv(Env.TEST)) { return }
 
-        const projectId = Environment.getProperty("firestore.projectId")
+        const projectId = Environment.getProperty("firestore.projectId") || Environment.systemProperty("PROJECT_ID")
 
         if(!projectId) {
             throw new RepositorySystemException(`ProjectId is required in env.yaml {firestore.projectId}`)
