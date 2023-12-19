@@ -1,7 +1,7 @@
 name: Versioning & deploy
 
 permissions:
-  contents: write
+  repository-projects: write
 
 on:
     pull_request:
