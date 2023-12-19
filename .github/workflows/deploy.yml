@@ -3,7 +3,7 @@ name: Versioning & deploy
 on:
     pull_request:
         branches:
-            - main
+            - master
         types:
             - closed
 
