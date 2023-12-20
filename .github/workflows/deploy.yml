@@ -35,7 +35,7 @@ jobs:
             with:
                 file: package.json
                 field: version
-                value: ${{ env.NEW_TAG }}
+                value: ${{ steps.version.outputs.version }}
          
           - name: updated package & add tag
             run: |
@@ -63,12 +63,10 @@ jobs:
     build:
       needs: version
       runs-on: ubuntu-latest
-      env:
-        NEW_TAG: ${{ needs.version.outputs.NEW_TAG }}
       steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v2
           with:
-            ref: v${{ env.NEW_TAG }}
+            ref: v${{ needs.version.outputs.NEW_TAG }}
         - run: jq '.version' package.json
         - uses: actions/setup-node@v3
           with:
