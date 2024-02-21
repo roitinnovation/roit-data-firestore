@@ -1,6 +1,12 @@
 import { CacheProvider } from "./CacheProvider";
 import { Environment } from "roit-environment";
 import { PlatformTools } from "../../platform/PlatformTools";
+import { timeout as promiseTimeout } from "promise-timeout";
+
+const REDIS_TIMEOUT =
+    Environment.getProperty('firestore.cache.timeout') as unknown as number || 2000
+const REDIS_RECONNECT: number =
+    Environment.getProperty('firestore.cache.reconnectInSecondsAfterTimeout') as unknown as number || 30
 
 export class RedisCacheProvider implements CacheProvider {
 
@@ -52,12 +58,26 @@ export class RedisCacheProvider implements CacheProvider {
             this.client.connect()
         }
     }
+
+    private handleTimeoutError(error: Error) {
+        if (error.message === 'Timeout' && this.isRedisReady) {
+            console.log('Setting isRedisReady as false')
+            this.isRedisReady = false;
+            // Stop everything for a while to unburden Redis
+            setTimeout(() => {
+                console.log('Setting isRedisReady as true')
+                this.isRedisReady = true;
+            }, REDIS_RECONNECT * 1000)
+        }
+    }
+
     getKeys(query: string): Promise<string[]> {
         try {
             if (this.isRedisReady) {
-                return this.client.KEYS(`*${query}*`)
+                return promiseTimeout(this.client.KEYS(`*${query}*`), REDIS_TIMEOUT)
             }
         } catch (error) {
+            this.handleTimeoutError(error)
             console.log(`[DEBUG] Redis Caching > Error when getting KEYS with query: ${query}, error: ${error}`)
         }
         return Promise.resolve([])
@@ -66,7 +86,7 @@ export class RedisCacheProvider implements CacheProvider {
     async getCacheResult(key: string): Promise<any | null> {
         try {
             if (this.isRedisReady) {
-                const result = await this.client.get(key)
+                const result: string = await promiseTimeout(this.client.get(key), REDIS_TIMEOUT)
         
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
                     if (result) {
@@ -79,8 +99,12 @@ export class RedisCacheProvider implements CacheProvider {
                 if (result) {
                     return JSON.parse(result)
                 }
+
+                return null
             }            
         } catch (error) {
+            this.handleTimeoutError(error)
+            console.log(`[DEBUG] Redis Caching > Error when getting key from redis. ${key}`, { error })
             return null
         }
     }
@@ -88,13 +112,14 @@ export class RedisCacheProvider implements CacheProvider {
     async saveCacheResult(key: string, valueToCache: any, ttl: number | undefined): Promise<void> {
         if (this.isRedisReady) {
             try {
-                await this.client.set(key, JSON.stringify(valueToCache), {
+                await promiseTimeout(this.client.set(key, JSON.stringify(valueToCache), {
                     EX: ttl || 0
-                })                
+                }), REDIS_TIMEOUT)     
                 if (Boolean(Environment.getProperty('firestore.debug'))) {
-                    console.debug('[DEBUG] Caching >', `Storage cache from key: ${key}`)
+                    console.debug('[DEBUG] Redis Caching >', `Storage cache from key: ${key}`)
                 }
             } catch (error) {
+                this.handleTimeoutError(error)                
                 console.log(`[DEBUG] Redis Caching > Error when saving cache. Key: ${key}, value: ${valueToCache}, error: ${error}`)
             }            
         }
@@ -103,9 +128,10 @@ export class RedisCacheProvider implements CacheProvider {
     async delete(key: string): Promise<void> {
         try {
             if (this.isRedisReady) {
-                await this.client.del(key)
+                await promiseTimeout(this.client.del(key), REDIS_TIMEOUT)
             }            
         } catch (error) {
+            this.handleTimeoutError(error)
             console.log(`[DEBUG] Redis Caching > Error when deleting key from redis. ${key}`)
         }
     }

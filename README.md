@@ -84,6 +84,15 @@ The anotation Cacheable is responsible from handler storage data in cache, local
 })
 ```
 
+##### Cache environment variables
+
+| Environment variable            | Description                             | Default value                                        |
+| -------------------|------------------------------------| ----------------------------------------     |
+| firestore.cache.redisUrl              | Ex: redis://localhost:63279           |
+| firestore.cache.timeout           | Timeout to Redis response (ms)            | 2000                  |
+| firestore.cache.reconnectInSecondsAfterTimeout      | Time to try to reconnect after Redis timeout (s)          | 30  |
+| firestore.debug        | Toggle debugging logs           | false                |
+
 ## BaseRepository and ReadonlyRepository
 To standardize the BaseRepository already provides the common methods for implementation
 
