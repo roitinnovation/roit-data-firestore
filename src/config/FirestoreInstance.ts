@@ -24,7 +24,7 @@ export class FirestoreInstance {
             })
             this.firestore.settings({ 
                 ignoreUndefinedProperties: Boolean(Environment.getProperty("firestore.ignoreUndefinedProperties") || false), 
-                databaseId: Environment.getProperty("firestore.databaseId") || '' 
+                databaseId: Environment.getProperty("firestore.databaseId")
             });
         } catch (err) {
             console.error(err)
