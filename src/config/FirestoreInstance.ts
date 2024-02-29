@@ -22,6 +22,10 @@ export class FirestoreInstance {
             this.firestore = new Firestore({
                 projectId
             })
+            this.firestore.settings({ 
+                ignoreUndefinedProperties: Boolean(Environment.getProperty("firestore.ignoreUndefinedProperties") || false), 
+                databaseId: Environment.getProperty("firestore.databaseId") || '' 
+            });
         } catch (err) {
             console.error(err)
             throw new RepositorySystemException(`Error in initializeApp: ${err}`)
