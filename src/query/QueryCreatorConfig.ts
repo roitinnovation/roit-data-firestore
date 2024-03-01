@@ -1,10 +1,10 @@
 import { CollectionReference, DocumentData, Query } from "@google-cloud/firestore";
-import { Paging } from "../model/Paging";
 import { Options } from "../model";
+import { FindDataConfig } from "../model/FindDataConfig";
 
 export class QueryCreatorConfig {
 
-    async buildPaging(collectionRef: CollectionReference<DocumentData>, paging?: Paging, options?: Options): 
+    async buildPaging(collectionRef: CollectionReference<DocumentData>, paging?: FindDataConfig, options?: Options): 
         Promise<{ documentRef: Query<DocumentData>; totalItens: number | null }> {
         const orderByDirection = paging?.orderByDirection || 'asc'
         const limit = paging?.limit ?? 1000
@@ -22,6 +22,10 @@ export class QueryCreatorConfig {
             ordersBy.forEach(order =>
                 documentRef = documentRef.orderBy(order, orderByDirection)
             )
+        }
+
+        if(paging?.select) {
+            documentRef.select(...paging.select)
         }
         
         if (paging?.cursor) {

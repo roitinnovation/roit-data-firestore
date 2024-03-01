@@ -1,7 +1,7 @@
 import { Query } from "../decorators/Query";
 import { QueryResult } from "../model";
-import { Config } from '../model/MQuery';
-import { Paging } from "../model/Paging";
+import { FindDataConfig } from "../model/FindDataConfig";
+import { Config, MQuery, MQuerySimple } from '../model/MQuery';
 import { ManualQueryHelper } from '../query/ManualQueryHelper';
 export abstract class BaseRepository<T> {
 
@@ -11,7 +11,7 @@ export abstract class BaseRepository<T> {
      * @param paging
      */
     @Query()
-    findAll: (paging?: Paging) => Promise<T[]>
+    findAll: (paging?: FindDataConfig) => Promise<T[]>
 
     /**
      * FindById
@@ -61,4 +61,13 @@ export abstract class BaseRepository<T> {
         const className = this.constructor.prototype.constructor.name
         return ManualQueryHelper.executeQueryManualPaginated(className, config)
     }
+
+    @Query()
+    count: (config: { query: Array<MQuery | MQuerySimple> }) => Promise<number>
+
+    @Query()
+    sum: (config: { attributeSum: string, query: Array<MQuery | MQuerySimple> }) => Promise<number>
+
+    @Query()
+    average: (config: { attributeAvg: string, query: Array<MQuery | MQuerySimple> }) => Promise<number>
 }

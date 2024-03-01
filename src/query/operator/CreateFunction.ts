@@ -1,10 +1,12 @@
-import { Firestore } from "@google-cloud/firestore";
+import { AggregateField, Firestore } from "@google-cloud/firestore";
 import { CacheResolver } from "../../cache/CacheResolver";
 import { RepositoryBusinessException } from "../../exception/RepositoryBusinessException";
 import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
 import { FirestoreReadAuditResolver } from "../../firestore-read-audit/FirestoreReadAuditResolver";
-import { Paging } from "../../model/Paging";
+import { MQuery, MQuerySimple } from "../../model";
+import { FindDataConfig } from "../../model/FindDataConfig";
 import { EnvironmentUtil } from "../../util/EnvironmentUtil";
+import { ManualQueryHelper } from "../ManualQueryHelper";
 import { QueryCreatorConfig } from "../QueryCreatorConfig";
 export class CreateFunction {
 
@@ -272,7 +274,7 @@ export class CreateFunction {
         return ids
     }
 
-    async findAll(paging?: Paging): Promise<any[]> {
+    async findAll(paging?: FindDataConfig): Promise<any[]> {
 
         let repositoryClassName = ''
         let methodSignature = ''
@@ -384,5 +386,137 @@ export class CreateFunction {
         } catch (e) {
             console.error(e?.details)
         }
+    }
+
+    async count(config: { query?: Array<MQuery | MQuerySimple> }): Promise<number> {
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+
+        if (environmentUtil.areWeTesting()) {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            return 0
+        }
+
+        const collection = db.collection('<COLLECTION_REPLACE>')
+
+        let queryList: Array<MQuery>
+        let queryExecute: any
+
+        if(config?.query && config.query.length > 0) {
+            queryList = config.query.map(query => {
+                if (Object.keys(query).length === 1) {
+                    return ManualQueryHelper.convertToMQuery(query as MQuerySimple)
+                }
+                return query;
+            }) as Array<MQuery>
+    
+            const queryInit = queryList[0]
+    
+            queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value)
+    
+            queryList.shift()
+    
+            queryList.forEach(que => {
+                queryExecute = queryExecute!.where(que.field, que.operator, que.value)
+            })
+        } else {
+            queryExecute = collection
+        }
+      
+
+        const snapshot = await queryExecute.count().get()
+
+        return snapshot.data().count;
+    }
+
+    async sum(config: { attributeSum: string, query?: Array<MQuery | MQuerySimple> }): Promise<number> {
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+
+        if (environmentUtil.areWeTesting()) {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            return 0
+        }
+
+        const collection = db.collection('<COLLECTION_REPLACE>')
+
+        let queryList: Array<MQuery>
+        let queryExecute: any
+
+        if(config?.query && config.query.length > 0) {
+            queryList = config.query.map(query => {
+                if (Object.keys(query).length === 1) {
+                    return ManualQueryHelper.convertToMQuery(query as MQuerySimple)
+                }
+                return query;
+            }) as Array<MQuery>
+    
+            const queryInit = queryList[0]
+    
+            queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value)
+    
+            queryList.shift()
+    
+            queryList.forEach(que => {
+                queryExecute = queryExecute!.where(que.field, que.operator, que.value)
+            })
+        } else {
+            queryExecute = collection
+        }
+
+        const sumAggregateQuery = queryExecute.aggregate({
+            sum: AggregateField.sum(config.attributeSum),
+        });
+
+        const snapshot = await sumAggregateQuery.get()
+
+        return snapshot.data().sum;
+    }
+
+    async average(config: { attributeAvg: string, query?: Array<MQuery | MQuerySimple> }): Promise<number> {
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+
+        if (environmentUtil.areWeTesting()) {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            return 0
+        }
+
+        const collection = db.collection('<COLLECTION_REPLACE>')
+
+        let queryList: Array<MQuery>
+        let queryExecute: any
+
+        if(config?.query && config.query.length > 0) {
+            queryList = config.query.map(query => {
+                if (Object.keys(query).length === 1) {
+                    return ManualQueryHelper.convertToMQuery(query as MQuerySimple)
+                }
+                return query;
+            }) as Array<MQuery>
+    
+            const queryInit = queryList[0]
+    
+            queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value)
+    
+            queryList.shift()
+    
+            queryList.forEach(que => {
+                queryExecute = queryExecute!.where(que.field, que.operator, que.value)
+            })
+        } else {
+            queryExecute = collection
+        }
+
+        const averageAggregateQuery = queryExecute.aggregate({
+            average: AggregateField.average(config.attributeAvg),
+        });
+
+        const snapshot = await averageAggregateQuery.get()
+
+        return snapshot.data().average;
     }
 }

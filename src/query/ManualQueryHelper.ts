@@ -113,7 +113,7 @@ export class ManualQueryHelper {
         }
     }
 
-    private static convertToMQuery(query: MQuerySimple): MQuery {
+    static convertToMQuery(query: MQuerySimple): MQuery {
         let mQueryBuilder: MQuery = new MQuery
         Object.keys(query).forEach(itmKey => {
             mQueryBuilder.field = itmKey
