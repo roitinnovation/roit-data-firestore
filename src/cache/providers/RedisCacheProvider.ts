@@ -31,9 +31,7 @@ export class RedisCacheProvider implements CacheProvider {
                 return
             }
 
-            const isJest = typeof jest !== 'undefined'
-
-            if (isJest) {
+            if (process.env.JEST_WORKER_ID !== undefined) {
                 return
             }
 
