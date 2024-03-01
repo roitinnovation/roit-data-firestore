@@ -100,12 +100,12 @@ export class CreateFunction {
 
         try {
             if (!environmentUtil.areWeTesting()) {
-                await document.update({
+                await document.set({
                     lastServiceModify,
                     updateAt,
                     updateTimestampAt,
                     ...item
-                });
+                }, { merge: true });
 
                 await this.revokeCache()
             } else {
@@ -162,7 +162,7 @@ export class CreateFunction {
 
             const docRef = collection.doc(item.id)
 
-            batch.update(docRef, JSON.parse(JSON.stringify(item)))
+            batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true })
         }
 
         if (!environmentUtil.areWeTesting()) {
