@@ -36,9 +36,9 @@ export class ManualQueryHelper {
 
             let queryList: Array<MQuery>
 
-            let queryExecute: any
+            let queryExecute: any = collection
 
-            if (config.query) {
+            if (config?.query && config?.query?.length > 0) {
 
                 queryList = config.query.map(query => {
                     if (Object.keys(query).length === 1) {
