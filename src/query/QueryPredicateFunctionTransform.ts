@@ -10,6 +10,7 @@ import { QueryCreatorConfig } from './QueryCreatorConfig';
 import { QueryOptions } from '../decorators/Query';
 import { FieldValue } from '@google-cloud/firestore';
 import { TtlBuilderUtil } from '../util/TtlBuilderUtil';
+import { ManualQueryHelper } from './ManualQueryHelper';
 const firestore = require('../config/FirestoreInstance')
 const dateRef = require('@roit/roit-date')
 const classValidator = require('class-validator')
@@ -40,7 +41,8 @@ export class QueryPredicateFunctionTransform {
             environmentUtil: new EnvironmentUtil,
             firestoreReadAuditResolver: FirestoreReadAuditResolver.getInstance(),
             fieldValueIncrement: FieldValue.increment,
-            getTtlTimestamp: TtlBuilderUtil.getTtlTimestamp
+            getTtlTimestamp: TtlBuilderUtil.getTtlTimestamp,
+            convertToMQuery: ManualQueryHelper.convertToMQuery
         }
 
         if (!options?.collection) {

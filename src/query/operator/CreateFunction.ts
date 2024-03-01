@@ -6,7 +6,6 @@ import { FirestoreReadAuditResolver } from "../../firestore-read-audit/Firestore
 import { MQuery, MQuerySimple } from "../../model";
 import { FindDataConfig } from "../../model/FindDataConfig";
 import { EnvironmentUtil } from "../../util/EnvironmentUtil";
-import { ManualQueryHelper } from "../ManualQueryHelper";
 import { QueryCreatorConfig } from "../QueryCreatorConfig";
 export class CreateFunction {
 
@@ -392,6 +391,7 @@ export class CreateFunction {
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        const convertToMQuery = (global as any).instances.convertToMQuery
 
         if (environmentUtil.areWeTesting()) {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
@@ -406,7 +406,7 @@ export class CreateFunction {
         if(config?.query && config.query.length > 0) {
             queryList = config.query.map(query => {
                 if (Object.keys(query).length === 1) {
-                    return ManualQueryHelper.convertToMQuery(query as MQuerySimple)
+                    return convertToMQuery(query)
                 }
                 return query;
             }) as Array<MQuery>
@@ -434,6 +434,7 @@ export class CreateFunction {
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        const convertToMQuery = (global as any).instances.convertToMQuery
 
         if (environmentUtil.areWeTesting()) {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
@@ -448,7 +449,7 @@ export class CreateFunction {
         if(config?.query && config.query.length > 0) {
             queryList = config.query.map(query => {
                 if (Object.keys(query).length === 1) {
-                    return ManualQueryHelper.convertToMQuery(query as MQuerySimple)
+                    return convertToMQuery(query)
                 }
                 return query;
             }) as Array<MQuery>
@@ -479,6 +480,7 @@ export class CreateFunction {
 
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        const convertToMQuery = (global as any).instances.convertToMQuery
 
         if (environmentUtil.areWeTesting()) {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
@@ -493,7 +495,7 @@ export class CreateFunction {
         if(config?.query && config.query.length > 0) {
             queryList = config.query.map(query => {
                 if (Object.keys(query).length === 1) {
-                    return ManualQueryHelper.convertToMQuery(query as MQuerySimple)
+                    return convertToMQuery(query)
                 }
                 return query;
             }) as Array<MQuery>
