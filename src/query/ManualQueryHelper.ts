@@ -124,7 +124,6 @@ export class ManualQueryHelper {
     }
 
     private static getData<T = any>(snapshot: any) {
-
         let items: Array<T> = []
 
         try {
