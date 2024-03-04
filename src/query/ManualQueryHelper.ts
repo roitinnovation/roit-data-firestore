@@ -21,7 +21,7 @@ export class ManualQueryHelper {
 
     static async handleExecuteQueryManual(className: string, config: Config, options: Options): Promise<QueryResult> {
         const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
-        const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify({...config, showCount: options?.showCount || false }))
+        const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify({ ...config, options }))
 
         if (result) {
             return result
@@ -87,7 +87,7 @@ export class ManualQueryHelper {
 
                 const data = this.getData(snapshot);
 
-                await cacheResolver.cacheResult(className, 'any', data, JSON.stringify(config))
+                await cacheResolver.cacheResult(className, 'any', { data, count }, JSON.stringify({ ...config, options }))
 
                 const firestoreReadAuditResolver: FirestoreReadAuditResolver = (global as any).instances.firestoreReadAuditResolver
 
