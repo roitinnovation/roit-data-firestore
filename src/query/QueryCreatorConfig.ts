@@ -33,6 +33,14 @@ export class QueryCreatorConfig {
             documentRef = documentRef.startAfter(...startAfter)
         }
 
+        if (paging?.startAt) {
+            documentRef = documentRef.startAt(paging.startAt)
+        }
+
+        if (paging?.endAt) {
+            documentRef = documentRef.endAt(paging.endAt)
+        }
+
         return {
             documentRef,
             totalItens
