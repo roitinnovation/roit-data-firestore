@@ -1,13 +1,13 @@
-import { AggregateField, Firestore } from "@google-cloud/firestore";
+import { Firestore } from "@google-cloud/firestore";
 import { CacheResolver } from "../../cache/CacheResolver";
 import { RepositoryBusinessException } from "../../exception/RepositoryBusinessException";
 import { ValidatorDataHandle } from "../../exception/handle/ValidatorDataHandle";
 import { FirestoreReadAuditResolver } from "../../firestore-read-audit/FirestoreReadAuditResolver";
 import { MQuery, MQuerySimple } from "../../model";
+import { Aggregate } from "../../model/Aggregate";
 import { FindDataConfig } from "../../model/FindDataConfig";
 import { EnvironmentUtil } from "../../util/EnvironmentUtil";
 import { QueryCreatorConfig } from "../QueryCreatorConfig";
-import { Aggregate } from "../../model/Aggregate";
 export class CreateFunction {
 
     createFunction(methodSignature: string): Function | null {
@@ -436,6 +436,7 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
         const convertToMQuery = (global as any).instances.convertToMQuery
+        const aggregateSum = (global as any).instances.aggregateSum
 
         if (environmentUtil.areWeTesting()) {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
@@ -469,7 +470,7 @@ export class CreateFunction {
         }
 
         const sumAggregateQuery = queryExecute.aggregate({
-            sum: AggregateField.sum(config.attributeSum),
+            sum: aggregateSum(config.attributeSum),
         });
 
         const snapshot = await sumAggregateQuery.get()
@@ -482,6 +483,7 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
         const convertToMQuery = (global as any).instances.convertToMQuery
+        const aggregateAverage = (global as any).instances.aggregateAverage
 
         if (environmentUtil.areWeTesting()) {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
@@ -515,7 +517,7 @@ export class CreateFunction {
         }
 
         const averageAggregateQuery = queryExecute.aggregate({
-            average: AggregateField.average(config.attributeAvg),
+            average: aggregateAverage(config.attributeAvg),
         });
 
         const snapshot = await averageAggregateQuery.get()
@@ -528,6 +530,9 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
         const convertToMQuery = (global as any).instances.convertToMQuery
+        const aggregateAverage = (global as any).instances.aggregateAverage
+        const aggregateSum = (global as any).instances.aggregateSum
+        const aggregateCount = (global as any).instances.aggregateCount
 
         if (environmentUtil.areWeTesting()) {
             console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
@@ -560,16 +565,21 @@ export class CreateFunction {
             queryExecute = collection
         }
 
-        const aggregateBuilder = {
-            average:(attribute: string) =>  AggregateField.average(attribute),
-            sum:(attribute: string) =>  AggregateField.average(attribute),
-            count:() => AggregateField.count()
-        }
-
         let aggregateObject: any = {}
 
         config.aggregations.forEach(item => {
-            aggregateObject[item.field] = aggregateBuilder[item.type](item.field)
+
+            if(item.type == 'average') {
+                aggregateObject[item.field] = aggregateAverage(item.field)
+            }
+
+            if(item.type == 'sum') {
+                aggregateObject[item.field] = aggregateSum(item.field)
+            }
+
+            if(item.type == 'count') {
+                aggregateObject[item.field] = aggregateCount()
+            }
         })
 
         const averageAggregateQuery = queryExecute.aggregate(aggregateObject);

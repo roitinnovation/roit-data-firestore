@@ -8,7 +8,7 @@ import { EnvironmentUtil } from '../util/EnvironmentUtil';
 import { CreateFunction } from "./operator/CreateFunction";
 import { QueryCreatorConfig } from './QueryCreatorConfig';
 import { QueryOptions } from '../decorators/Query';
-import { FieldValue } from '@google-cloud/firestore';
+import { AggregateField, FieldValue } from '@google-cloud/firestore';
 import { TtlBuilderUtil } from '../util/TtlBuilderUtil';
 import { ManualQueryHelper } from './ManualQueryHelper';
 const firestore = require('../config/FirestoreInstance')
@@ -42,7 +42,10 @@ export class QueryPredicateFunctionTransform {
             firestoreReadAuditResolver: FirestoreReadAuditResolver.getInstance(),
             fieldValueIncrement: FieldValue.increment,
             getTtlTimestamp: TtlBuilderUtil.getTtlTimestamp,
-            convertToMQuery: ManualQueryHelper.convertToMQuery
+            convertToMQuery: ManualQueryHelper.convertToMQuery,
+            aggregateAverage: AggregateField.average,
+            aggregateSum: AggregateField.sum,
+            aggregateCount: AggregateField.count
         }
 
         if (!options?.collection) {
