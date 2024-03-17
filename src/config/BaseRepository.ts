@@ -1,5 +1,6 @@
 import { Query } from "../decorators/Query";
 import { QueryResult } from "../model";
+import { Aggregate } from "../model/Aggregate";
 import { FindDataConfig } from "../model/FindDataConfig";
 import { Config, MQuery, MQuerySimple } from '../model/MQuery';
 import { ManualQueryHelper } from '../query/ManualQueryHelper';
@@ -70,4 +71,7 @@ export abstract class BaseRepository<T> {
 
     @Query()
     average: (config: { attributeAvg: string, query: Array<MQuery | MQuerySimple> }) => Promise<number>
+
+    @Query()
+    aggregation: (config: { query?: Array<MQuery | MQuerySimple>, aggregations: Array<Aggregate> }) => Promise<{ [k: string]: string | number }>
 }

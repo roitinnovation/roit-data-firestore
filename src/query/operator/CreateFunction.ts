@@ -7,6 +7,7 @@ import { MQuery, MQuerySimple } from "../../model";
 import { FindDataConfig } from "../../model/FindDataConfig";
 import { EnvironmentUtil } from "../../util/EnvironmentUtil";
 import { QueryCreatorConfig } from "../QueryCreatorConfig";
+import { Aggregate } from "../../model/Aggregate";
 export class CreateFunction {
 
     createFunction(methodSignature: string): Function | null {
@@ -520,5 +521,67 @@ export class CreateFunction {
         const snapshot = await averageAggregateQuery.get()
 
         return snapshot.data().average;
+    }
+
+    async aggregation(config: { query?: Array<MQuery | MQuerySimple>, aggregations: Array<Aggregate> }): Promise<{ [k: string]: string | number }> {
+
+        const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
+        const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
+        const convertToMQuery = (global as any).instances.convertToMQuery
+
+        if (environmentUtil.areWeTesting()) {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+            return {}
+        }
+
+        const collection = db.collection('<COLLECTION_REPLACE>')
+
+        let queryList: Array<MQuery>
+        let queryExecute: any
+
+        if(config?.query && config.query.length > 0) {
+            queryList = config.query.map(query => {
+                if (Object.keys(query).length === 1) {
+                    return convertToMQuery(query)
+                }
+                return query;
+            }) as Array<MQuery>
+    
+            const queryInit = queryList[0]
+    
+            queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value)
+    
+            queryList.shift()
+    
+            queryList.forEach(que => {
+                queryExecute = queryExecute!.where(que.field, que.operator, que.value)
+            })
+        } else {
+            queryExecute = collection
+        }
+
+        const aggregateBuilder = {
+            average:(attribute: string) =>  AggregateField.average(attribute),
+            sum:(attribute: string) =>  AggregateField.average(attribute),
+            count:() => AggregateField.count()
+        }
+
+        let aggregateObject: any = {}
+
+        config.aggregations.forEach(item => {
+            aggregateObject[item.field] = aggregateBuilder[item.type](item.field)
+        })
+
+        const averageAggregateQuery = queryExecute.aggregate(aggregateObject);
+
+        const snapshot = await averageAggregateQuery.get()
+
+        let resultBuilder: any = {}
+
+        config.aggregations.forEach(item => {
+            resultBuilder[item.field] = snapshot.data()[item.field]
+        })
+
+        return resultBuilder;
     }
 }
