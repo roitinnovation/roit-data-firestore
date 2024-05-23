@@ -57,10 +57,6 @@ export class CreateFunction {
                 item.id = uuid();
             }
 
-            if(ttlExpirationIn && ttlUnit) {
-                item.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit)
-            }
-
             if (!item.createAt) {
                 item.createAt = newDate()
                 item.createTimestampAt = new Date(item.createAt).getTime()
@@ -74,6 +70,14 @@ export class CreateFunction {
             const docRef = collection.doc(item.id)
 
             batch.set(docRef, JSON.parse(JSON.stringify(item)))
+
+            if(ttlExpirationIn && ttlUnit) {
+                const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
+                
+                batch.set(docRef, {
+                    ttlExpirationAt: ttl,
+                }, { merge: true});
+            }
         }
 
         if (!environmentUtil.areWeTesting()) {
@@ -154,15 +158,19 @@ export class CreateFunction {
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
 
-            if(ttlExpirationIn && ttlUnit && ttlUpdate) {
-                item.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit)
-            }
-
             item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
 
             const docRef = collection.doc(item.id)
 
             batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true })
+
+            if(ttlExpirationIn && ttlUnit && ttlUpdate) {
+                const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
+                
+                batch.set(docRef, {
+                    ttlExpirationAt: ttl,
+                }, { merge: true});
+            }
         }
 
         if (!environmentUtil.areWeTesting()) {
@@ -217,15 +225,19 @@ export class CreateFunction {
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
 
-            if(ttlExpirationIn && ttlUnit) {
-                item.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit)
-            }
-
             item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
 
             const docRef = collection.doc(item.id)
 
             batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true })
+
+            if(ttlExpirationIn && ttlUnit) {
+                const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
+                
+                batch.set(docRef, {
+                    ttlExpirationAt: ttl,
+                }, { merge: true});
+            }
         }
 
         if (!environmentUtil.areWeTesting()) {
