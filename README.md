@@ -9,7 +9,6 @@ To validate the model use [class-validator](https://www.npmjs.com/package/class-
 
 ```
 export class User {
-
     @IsString()
     id: string
 
