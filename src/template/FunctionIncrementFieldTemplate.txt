@@ -1,0 +1,22 @@
+incrementField(id, field, increment) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+        const environmentUtil = global.instances.environmentUtil;
+        const fieldValueIncrement = global.instances.fieldValueIncrement;
+        const document = db.collection('<COLLECTION_REPLACE>').doc(id);
+        try {
+            if (!environmentUtil.areWeTesting()) {
+                let payload = {};
+                payload[field] = fieldValueIncrement(increment || 1);
+                yield document.set(payload, { merge: true });
+                yield this.revokeCache();
+            }
+            else {
+                console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+            }
+        }
+        catch (e) {
+            console.error(e === null || e === void 0 ? void 0 : e.details);
+        }
+    });
+}
