@@ -5,21 +5,37 @@ import { FirestoreReadAuditResolver } from '../firestore-read-audit/FirestoreRea
 import { QueryPredicate } from "../model/QueryPredicate";
 import { RepositoryOptions } from "../model/RepositoryOptions";
 import { EnvironmentUtil } from '../util/EnvironmentUtil';
-import { CreateFunction } from "./operator/CreateFunction";
+// import { CreateFunction } from "./operator/CreateFunction";
 import { QueryCreatorConfig } from './QueryCreatorConfig';
 import { QueryOptions } from '../decorators/Query';
 import { AggregateField, FieldValue } from '@google-cloud/firestore';
 import { TtlBuilderUtil } from '../util/TtlBuilderUtil';
 import { ManualQueryHelper } from './ManualQueryHelper';
-const firestore = require('../config/FirestoreInstance')
-const dateRef = require('@roit/roit-date')
-const classValidator = require('class-validator')
-const uuid = require("uuid");
-const { Environment } = require('roit-environment')
-const fs = require('fs')
-const path = require('path')
+import * as firestore from '../config/FirestoreInstance'
+import * as dateRef from '@roit/roit-date'
+import classValidator from 'class-validator'
+import * as uuid from 'uuid'
+import { Environment }  from 'roit-environment'
+import fs  from 'fs'
+import path  from 'path'
 
-const templateFun = fs.readFileSync(path.resolve(__dirname, '../../template/FunctionQueryTemplate.txt'), 'utf8')
+const functionQueryTemplate = fs.readFileSync(path.resolve(__dirname, '../template/FunctionQueryTemplate.txt'), 'utf8')
+
+const methodList = {
+    'aggregation': fs.readFileSync(path.resolve(__dirname, '../template/FunctionAggregationTemplate.txt'), 'utf8'),
+    'average': fs.readFileSync(path.resolve(__dirname, '../template/FunctionAverageTemplate.txt'), 'utf8'),
+    'count': fs.readFileSync(path.resolve(__dirname, '../template/FunctionCountTemplate.txt'), 'utf8'),
+    'createOrUpdate': fs.readFileSync(path.resolve(__dirname, '../template/FunctionCreateOrUpdateTemplate.txt'), 'utf8'),
+    'create': fs.readFileSync(path.resolve(__dirname, '../template/FunctionCreateTemplate.txt'), 'utf8'),
+    'delete': fs.readFileSync(path.resolve(__dirname, '../template/FunctionDeleteTemplate.txt'), 'utf8'),
+    'findAll': fs.readFileSync(path.resolve(__dirname, '../template/FunctionFindAllTemplate.txt'), 'utf8'),
+    'findById': fs.readFileSync(path.resolve(__dirname, '../template/FunctionFindByIdTemplate.txt'), 'utf8'),
+    'incrementField': fs.readFileSync(path.resolve(__dirname, '../template/FunctionIncrementFieldTemplate.txt'), 'utf8'),
+    'revokeCache': fs.readFileSync(path.resolve(__dirname, '../template/FunctionRevokeCacheTemplate.txt'), 'utf8'),
+    'sum': fs.readFileSync(path.resolve(__dirname, '../template/FunctionSumTemplate.txt'), 'utf8'),
+    'updatePartial': fs.readFileSync(path.resolve(__dirname, '../template/FunctionUpdatePartialTemplate.txt'), 'utf8'),
+    'update': fs.readFileSync(path.resolve(__dirname, '../template/FunctionUpdateTemplate.txt'), 'utf8')
+}
 
 export class QueryPredicateFunctionTransform {
 
@@ -65,9 +81,12 @@ export class QueryPredicateFunctionTransform {
         const instance = Object.create(options.validateModel)
         this.schemaRegister.set(modelName, targetConstructorToSchema(instance))
 
-        const func = new CreateFunction().createFunction(methodSignature)
+        // const func = new CreateFunction().createFunction(methodSignature)
 
-        if (func) {
+        if (methodSignature in methodList) {
+            
+            const func = methodList[methodSignature as keyof typeof methodList]
+
             let functionString = func.toString()
                 .replace(methodSignature, 'async function')
                 .replace('return __awaiter(this, void 0, void 0, function* () {', '')
@@ -91,7 +110,7 @@ export class QueryPredicateFunctionTransform {
         let parameters = queryPredicate.filter(query => query.operator?.includes('.where'))
         parameters = parameters.concat({ attribute: 'paging' } as any)
 
-        let functionBuilder = templateFun
+        let functionBuilder = functionQueryTemplate
 
         const getAttribute = (queryPredicate: QueryPredicate) => queryPredicate.paramContent ?? queryPredicate.attribute
 
@@ -101,7 +120,7 @@ export class QueryPredicateFunctionTransform {
         functionBuilder = functionBuilder.replace(/<params_validator_replace>/g, parameters.filter(par => par.attribute != 'paging').map(att => `!${getAttribute(att)}`).join('||'))
         functionBuilder = functionBuilder.replace(/<collection_name_replace>/g, options.collection)
         functionBuilder = functionBuilder.replace(/<query_predicate_replace>/g, queryPredicate.map(att => `${att.operator?.replace('ATRIBUTE', att.attribute).replace('VALUE', getAttribute(att))}`).join(''))
-        functionBuilder = functionBuilder.replace(/<is_one_row>/g, methodQueryOptions?.oneRow || false)
+        functionBuilder = functionBuilder.replace(/<is_one_row>/g, methodQueryOptions?.oneRow ? 'true' : 'false')
 
 
         return Function(`return ${functionBuilder}`)()

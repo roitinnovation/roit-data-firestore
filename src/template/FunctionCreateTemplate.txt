@@ -1,0 +1,51 @@
+create(items) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let modelName = '';
+        let validatorOptions;
+        let ttlExpirationIn;
+        let ttlUnit;
+        if (!Array.isArray(items)) {
+            items = [items];
+        }
+        if (items.length > 500) {
+            throw new RepositoryBusinessException_1.RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, []);
+        }
+        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+        const { newDate } = global.instances.dateRef;
+        const uuid = global.instances.uuid;
+        const environmentUtil = global.instances.environmentUtil;
+        const getTtlTimestamp = global.instances.getTtlTimestamp;
+        const collection = db.collection('<COLLECTION_REPLACE>');
+        const validatorDataHandle = global.instances.validatorDataHandle;
+        const batch = db.batch();
+        for (const item of items) {
+            yield validatorDataHandle.validateModel(modelName, item, validatorOptions);
+            if (!item.id) {
+                item.id = uuid();
+            }
+            if (!item.createAt) {
+                item.createAt = newDate();
+                item.createTimestampAt = new Date(item.createAt).getTime();
+            }
+            item.updateAt = newDate();
+            item.updateTimestampAt = new Date(item.updateAt).getTime();
+            item.lastServiceModify = global.instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED';
+            const docRef = collection.doc(item.id);
+            batch.set(docRef, JSON.parse(JSON.stringify(item)));
+            if (ttlExpirationIn && ttlUnit) {
+                const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
+                batch.set(docRef, {
+                    ttlExpirationAt: ttl,
+                }, { merge: true });
+            }
+        }
+        if (!environmentUtil.areWeTesting()) {
+            yield batch.commit();
+            yield this.revokeCache();
+        }
+        else {
+            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+        }
+        return items;
+    });
+}
