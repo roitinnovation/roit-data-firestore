@@ -25,7 +25,7 @@ export abstract class BaseRepository<T> {
     create: (item: T | Array<T>) => Promise<Array<T>>
 
     @Query()
-    update: (items: T | Array<T>) => Promise<Array<T>>
+    update: (items: T | Array<T> | Partial<T> | Array<Partial<T>>) => Promise<Array<T>>
 
     @Query()
     createOrUpdate: (items: T | Array<T>) => Promise<Array<T>>
