@@ -43,7 +43,7 @@ describe('TesteExample tests', () => {
 
   });
 
-  it('generic repo', async () => {
+  it('generic repo test', async () => {
 
     const result: DynamicRepo = new DynamicRepo({
       collection: 'fb-data-test-dynamic',
@@ -55,6 +55,27 @@ describe('TesteExample tests', () => {
     expect(resultCreate[0].id).toBe("1")
     expect(resultCreate[0].name).toBe("asa")
     expect(resultCreate[0].age).toBe(41)
+
+  });
+
+  it('queryRef method test', async () => {
+
+    const result: DynamicRepo = new DynamicRepo({
+      collection: 'fb-data-test-dynamic',
+      validateModel: User
+    })
+
+    const resultQueryRef = await result.queryRef({
+      query: [
+        {
+          field: "id",
+          operator: "==",
+          value: 1
+        }
+      ]
+    })
+
+    expect(resultQueryRef).not.toBeUndefined()
 
   });
 
