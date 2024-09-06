@@ -2,6 +2,8 @@
 // import { User } from './example/model/User';
 import { Env, Environment } from 'roit-environment';
 import { Repository1 } from './example/Repository1';
+import { DynamicRepo } from './example/DynamicRepo';
+import { User } from './example/model/User';
 
 jest.setTimeout(50000)
 
@@ -38,6 +40,21 @@ describe('TesteExample tests', () => {
     const resultFind = await result.findById('1')
 
     expect(resultFind).toBe(undefined)
+
+  });
+
+  it('generic repo', async () => {
+
+    const result: DynamicRepo = new DynamicRepo({
+      collection: 'fb-data-test-dynamic',
+      validateModel: User
+    })
+
+    const resultCreate = await result.create({ id: '1', name: 'asa', age: 41 })
+
+    expect(resultCreate[0].id).toBe("1")
+    expect(resultCreate[0].name).toBe("asa")
+    expect(resultCreate[0].age).toBe(41)
 
   });
 

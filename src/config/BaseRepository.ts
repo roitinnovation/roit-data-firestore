@@ -1,3 +1,4 @@
+import { Query as QueryFs } from "@google-cloud/firestore";
 import { Query } from "../decorators/Query";
 import { QueryResult } from "../model";
 import { Aggregate } from "../model/Aggregate";
@@ -56,6 +57,11 @@ export abstract class BaseRepository<T> {
     async query(config: Config): Promise<T[]> {
         const className = this.constructor.prototype.constructor.name
         return ManualQueryHelper.executeQueryManual(className, config)
+    }
+
+    async queryRef(config: Config): Promise<QueryFs> {
+        const className = this.constructor.prototype.constructor.name
+        return ManualQueryHelper.executeQueryManual(className, config, true)
     }
 
     async queryPaginated(config: Config): Promise<QueryResult<T>> {
