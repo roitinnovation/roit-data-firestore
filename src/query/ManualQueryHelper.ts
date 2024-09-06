@@ -1,17 +1,17 @@
 import { Firestore } from "@google-cloud/firestore";
-import { FirestoreInstance } from '../config/FirestoreInstance';
-import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
-import { RepositoryOptions } from '../model/RepositoryOptions';
-import { MQuery, MQuerySimple, Config, Options } from '../model/MQuery';
 import { CacheResolver } from "../cache/CacheResolver";
+import { FirestoreInstance } from '../config/FirestoreInstance';
 import { FirestoreReadAuditResolver } from "../firestore-read-audit/FirestoreReadAuditResolver";
-import { QueryCreatorConfig } from "./QueryCreatorConfig";
 import { QueryResult } from "../model";
+import { Config, MQuery, MQuerySimple, Options } from '../model/MQuery';
+import { RepositoryOptions } from '../model/RepositoryOptions';
+import { QueryCreatorConfig } from "./QueryCreatorConfig";
+import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
 
 export class ManualQueryHelper {
 
-    static async executeQueryManual(className: string, config: Config): Promise<Array<any>> {
-        const { data } = await this.handleExecuteQueryManual(className, config, { showCount: false })
+    static async executeQueryManual(className: string, config: Config, queryRef = false): Promise<any> {
+        const { data } = await this.handleExecuteQueryManual(className, config, { showCount: false }, queryRef)
         return data
     }
     
@@ -19,7 +19,7 @@ export class ManualQueryHelper {
         return this.handleExecuteQueryManual(className, config, { showCount: true })
     }
 
-    static async handleExecuteQueryManual(className: string, config: Config, options: Options): Promise<QueryResult> {
+    static async handleExecuteQueryManual(className: string, config: Config, options: Options, queryRef = false): Promise<QueryResult> {
         const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
         const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify({ ...config, options }))
 
@@ -83,6 +83,11 @@ export class ManualQueryHelper {
                     queryExecute = documentRef
                     count = totalItens
                 }
+
+                if(queryRef) {
+                    return queryExecute
+                }
+
                 const snapshot = await queryExecute.get()
 
                 const data = this.getData(snapshot);
