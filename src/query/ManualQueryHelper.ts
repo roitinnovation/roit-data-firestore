@@ -11,7 +11,14 @@ import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransfo
 export class ManualQueryHelper {
 
     static async executeQueryManual(className: string, config: Config, queryRef = false): Promise<any> {
-        const { data } = await this.handleExecuteQueryManual(className, config, { showCount: false }, queryRef)
+        const result = await this.handleExecuteQueryManual(className, config, { showCount: false }, queryRef)
+        
+        if(queryRef) {
+            return result
+        }
+
+        const { data } = result
+
         return data
     }
     
