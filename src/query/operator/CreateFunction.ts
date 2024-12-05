@@ -23,16 +23,13 @@ export class CreateFunction {
 
     private async revokeCache() { }
 
-    async create(items: any | Array<any>): Promise<Array<any>> {
-
+    async create(data: any | Array<any>): Promise<Array<any>> {
         let modelName = ''
         let validatorOptions
         let ttlExpirationIn
         let ttlUnit
 
-        if (!Array.isArray(items)) {
-            items = [items]
-        }
+        const items = Array.isArray(data) ? data.slice() : [JSON.parse(JSON.stringify(data))]
 
         if (items.length > 500) {
             throw new RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, [])
@@ -49,7 +46,7 @@ export class CreateFunction {
         const validatorDataHandle: ValidatorDataHandle = (global as any).instances.validatorDataHandle
 
         const batch = db.batch()
-
+    
         for (const item of items) {
             await validatorDataHandle.validateModel(modelName, item, validatorOptions)
 
@@ -68,16 +65,13 @@ export class CreateFunction {
             item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
 
             const docRef = collection.doc(item.id)
-
-            batch.set(docRef, JSON.parse(JSON.stringify(item)))
-
+            const itemParsed = JSON.parse(JSON.stringify(item))
+            
             if(ttlExpirationIn && ttlUnit) {
-                const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
-                
-                batch.set(docRef, {
-                    ttlExpirationAt: ttl,
-                }, { merge: true});
+                itemParsed.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit);
             }
+
+            batch.set(docRef, itemParsed)
         }
 
         if (!environmentUtil.areWeTesting()) {
@@ -120,17 +114,14 @@ export class CreateFunction {
         }
     }
 
-    async update(items: any | Array<any>): Promise<any> {
-
+    async update(data: any | Array<any>): Promise<any> {
         let modelName = ''
         let validatorOptions
         let ttlExpirationIn
         let ttlUnit
         let ttlUpdate
 
-        if (!Array.isArray(items)) {
-            items = [items]
-        }
+        const items = Array.isArray(data) ? data.slice() : [JSON.parse(JSON.stringify(data))]
 
         if (items.length > 500) {
             throw new RepositoryBusinessException(`To perform the create, the maximum number of elements is 500, size current: ${items.length}`, [])
@@ -162,15 +153,16 @@ export class CreateFunction {
 
             const docRef = collection.doc(item.id)
 
-            batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true })
+            const itemParsed = JSON.parse(JSON.stringify(item));
 
-            if(ttlExpirationIn && ttlUnit && ttlUpdate) {
+            if (ttlExpirationIn && ttlUnit && ttlUpdate) {
                 const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
-                
-                batch.set(docRef, {
-                    ttlExpirationAt: ttl,
-                }, { merge: true});
+                itemParsed.ttlExpirationAt = ttl; 
+            } else if (item.ttlExpirationAt) {
+                itemParsed.ttlExpirationAt = item.ttlExpirationAt
             }
+            
+            batch.set(docRef, itemParsed, { merge: true });
         }
 
         if (!environmentUtil.areWeTesting()) {
