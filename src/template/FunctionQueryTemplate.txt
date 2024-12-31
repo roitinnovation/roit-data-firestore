@@ -22,7 +22,7 @@
 
         const collection = db.collection('<collection_name_replace>')
 
-        if(Number(global.instances.Environment.getProperty('firestore.debug'))) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
+        if(Number(process.env.FIRESTORE_DEBUG)) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
 
         let collectionRef = collection<query_predicate_replace>
         let { documentRef } = await global.instances.queryCreatorConfig.buildPaging(collectionRef, paging, { showCount: false })

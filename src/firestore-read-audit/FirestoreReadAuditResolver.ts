@@ -1,5 +1,5 @@
-import { Environment } from "roit-environment"
 import { PersistFirestoreReadProps } from "../model/PersistFirestoreReadProps"
+import { currentEnv } from "../util/CurrentEnv"
 import { BigQueryFirestoreReadAuditProvider } from "./providers/BigQueryFirestoreReadAuditProvider"
 import { FirestoreReadAuditProvider } from "./providers/FirestoreReadAuditProvider"
 import { PubSubFirestoreReadAuditProvider } from "./providers/PubSubFirestoreReadAuditProvider"
@@ -16,8 +16,8 @@ export class FirestoreReadAuditResolver {
         this.providersImplMap.set('PubSub', PubSubFirestoreReadAuditProvider)
         this.providersImplMap.set('BigQuery', BigQueryFirestoreReadAuditProvider)
 
-        if (Environment.getProperty('firestore.audit.enable') && !this.isReadAuditTimeEnded()) {
-            const envProvider = Environment.getProperty('firestore.audit.provider') || 'PubSub'
+        if (process.env.FIRESTORE_AUDIT_ENABLE && !this.isReadAuditTimeEnded()) {
+            const envProvider = process.env.FIRESTORE_AUDIT_PROVIDER || 'PubSub'
             const providerImpl = this.providersImplMap.get(envProvider)
             this.provider = new providerImpl()
         }
@@ -28,7 +28,7 @@ export class FirestoreReadAuditResolver {
     }
 
     private isReadAuditTimeEnded() {
-        const readAuditEndAt = Environment.getProperty('firestore.audit.endAt')
+        const readAuditEndAt = process.env.FIRESTORE_AUDIT_ENDAT
         if (readAuditEndAt) {
             return new Date(readAuditEndAt) < new Date()
         }
@@ -45,10 +45,10 @@ export class FirestoreReadAuditResolver {
 
             await this.provider.persistFirestoreRead({
                 ...props,
-                env: Environment.currentEnv(),
+                env: currentEnv,
                 insertAt: new Date().toISOString().slice(0, -1),
-                projectId: Environment.getProperty('firestore.projectId'),
-                service: Environment.getProperty('service'),
+                projectId: process.env.FIRESTORE_PROJECTID || '',
+                service: process.env.SERVICE || '',
                 queryResult: JSON.stringify(props.queryResult),
                 queryResultLength: queryResultLength
             })

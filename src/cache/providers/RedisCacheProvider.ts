@@ -1,12 +1,12 @@
 import { CacheProvider } from "./CacheProvider";
-import { Environment } from "roit-environment";
 import { PlatformTools } from "../../platform/PlatformTools";
 import { timeout as promiseTimeout } from "promise-timeout";
+import { isDebug } from "../../util/IsDebug";
 
 const REDIS_TIMEOUT =
-    Environment.getProperty('firestore.cache.timeout') as unknown as number || 2000
+    process.env.FIRESTORE_CACHE_TIMEOUT as unknown as number || 2000
 const REDIS_RECONNECT: number =
-    Environment.getProperty('firestore.cache.reconnectInSecondsAfterTimeout') as unknown as number || 30
+    process.env.FIRESTORE_CACHE_RECONNECTINSECONDSAFTERTIMEOUT as unknown as number || 30
 
 export class RedisCacheProvider implements CacheProvider {
 
@@ -24,7 +24,7 @@ export class RedisCacheProvider implements CacheProvider {
 
     constructor() {
         if (!this.redis) {
-            const url = Environment.getProperty('firestore.cache.redisUrl')
+            const url = process.env.FIRESTORE_CACHE_REDISURL
 
             if (!url) {
                 console.error(`[ERROR] Redis Caching > environtment variable "firestore.cache.redisUrl" was not found!`)
@@ -41,14 +41,14 @@ export class RedisCacheProvider implements CacheProvider {
 
             this.client.on('error', (err: any) => {
                 this.isRedisReady = false
-                if (Boolean(Environment.getProperty('firestore.debug'))) {
+                if (isDebug) {
                     console.warn('[WARN] Redis error', err)
                 }
             });
 
             this.client.on('ready', () => {
                 this.isRedisReady = true
-                if (Boolean(Environment.getProperty('firestore.debug'))) {
+                if (isDebug) {
                     console.log('[DEBUG] Redis Caching > Redis is ready')
                 }
             })
@@ -86,7 +86,7 @@ export class RedisCacheProvider implements CacheProvider {
             if (this.isRedisReady) {
                 const result: string = await promiseTimeout(this.client.get(key), REDIS_TIMEOUT)
         
-                if (Boolean(Environment.getProperty('firestore.debug'))) {
+                if (isDebug) {
                     if (result) {
                         console.debug('[DEBUG] Redis Caching >', `Return value in cache from key: ${key}`)
                     } else {
@@ -113,7 +113,7 @@ export class RedisCacheProvider implements CacheProvider {
                 await promiseTimeout(this.client.set(key, JSON.stringify(valueToCache), {
                     EX: ttl || 0
                 }), REDIS_TIMEOUT)     
-                if (Boolean(Environment.getProperty('firestore.debug'))) {
+                if (isDebug) {
                     console.debug('[DEBUG] Redis Caching >', `Storage cache from key: ${key}`)
                 }
             } catch (error) {

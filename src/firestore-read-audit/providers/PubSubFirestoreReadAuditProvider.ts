@@ -1,4 +1,3 @@
-import { Environment } from "roit-environment";
 import { PersistFirestoreReadEnrichedProps } from "../../model/PersistFirestoreReadProps";
 import { PlatformTools } from "../../platform/PlatformTools";
 import { FirestoreReadAuditProvider } from "./FirestoreReadAuditProvider";
@@ -11,7 +10,7 @@ export class PubSubFirestoreReadAuditProvider implements FirestoreReadAuditProvi
 
     private constructor() {
         const { PubSub } = this.loadPubSub()
-        const projectId = Environment.getProperty("firestore.projectId")
+        const projectId = process.env.FIRESTORE_PROJECTID
     
         if (!projectId) {
             throw new Error(`projectId is required in env.yaml {firestore.projectId}`)
@@ -21,7 +20,7 @@ export class PubSubFirestoreReadAuditProvider implements FirestoreReadAuditProvi
             projectId
         })
 
-        const envTopic = Environment.getProperty('firestore.audit.pubSubTopic')
+        const envTopic = process.env.FIRESTORE_AUDIT_PUBSUBTOPIC
 
         if (!envTopic) {
             throw new Error(`pubSubTopic is required in env.yaml {firestore.audit.pubSubTopic}`)

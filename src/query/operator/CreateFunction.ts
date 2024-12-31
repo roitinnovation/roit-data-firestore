@@ -62,7 +62,7 @@ export class CreateFunction {
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
 
-            item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+            item.lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED'
 
             const docRef = collection.doc(item.id)
             const itemParsed = JSON.parse(JSON.stringify(item))
@@ -89,7 +89,7 @@ export class CreateFunction {
         const db: Firestore = (global as any).instances.globalDbFile.FirestoreInstance.getInstance()
         const { newDate } = (global as any).instances.dateRef
 
-        const lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+        const lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED'
         const updateAt = newDate()
         const updateTimestampAt = new Date(updateAt).getTime()
         const environmentUtil: EnvironmentUtil = (global as any).instances.environmentUtil
@@ -149,7 +149,7 @@ export class CreateFunction {
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
 
-            item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+            item.lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED'
 
             const docRef = collection.doc(item.id)
 
@@ -217,7 +217,7 @@ export class CreateFunction {
             item.updateAt = newDate()
             item.updateTimestampAt = new Date(item.updateAt).getTime()
 
-            item.lastServiceModify = (global as any).instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED'
+            item.lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED'
 
             const docRef = collection.doc(item.id)
 

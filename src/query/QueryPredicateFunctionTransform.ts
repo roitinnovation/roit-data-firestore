@@ -15,7 +15,6 @@ import * as firestore from '../config/FirestoreInstance'
 import * as dateRef from '@roit/roit-date'
 import classValidator from 'class-validator'
 import * as uuid from 'uuid'
-import { Environment }  from 'roit-environment'
 import fs  from 'fs'
 import path  from 'path'
 
@@ -51,7 +50,6 @@ export class QueryPredicateFunctionTransform {
             classValidator,
             validatorDataHandle: new ValidatorDataHandle,
             uuid: uuid.v4,
-            Environment,
             queryCreatorConfig: new QueryCreatorConfig,
             cacheResolver: CacheResolver.getInstance(),
             environmentUtil: new EnvironmentUtil,

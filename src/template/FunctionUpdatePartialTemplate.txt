@@ -2,7 +2,7 @@ updatePartial(id, item) {
     return __awaiter(this, void 0, void 0, function* () {
         const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
         const { newDate } = global.instances.dateRef;
-        const lastServiceModify = global.instances.Environment.getProperty('service') || 'PROJECT_UNDEFINED';
+        const lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED';
         const updateAt = newDate();
         const updateTimestampAt = new Date(updateAt).getTime();
         const environmentUtil = global.instances.environmentUtil;

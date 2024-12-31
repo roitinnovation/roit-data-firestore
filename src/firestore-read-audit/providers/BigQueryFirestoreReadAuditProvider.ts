@@ -1,4 +1,3 @@
-import { Env, Environment } from 'roit-environment'
 import { PersistFirestoreReadEnrichedProps } from '../../model/PersistFirestoreReadProps';
 import { PlatformTools } from '../../platform/PlatformTools';
 import { FirestoreReadAuditProvider } from './FirestoreReadAuditProvider';
@@ -16,10 +15,10 @@ export class BigQueryFirestoreReadAuditProvider implements FirestoreReadAuditPro
     private isTableCreated: boolean = false
 
     constructor() {
-        if (Environment.acceptedEnv(Env.TEST)) return
+        if (process.env.ENV === 'test') return
 
         if (!this.bigQuery) {
-            const projectId = Environment.getProperty("firestore.projectId")
+            const projectId = process.env.FIRESTORE_PROJECTID
     
             if (!projectId) {
                 throw new Error(`projectId is required in env.yaml {firestore.projectId}`)
