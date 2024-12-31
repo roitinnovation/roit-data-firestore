@@ -1,4 +1,5 @@
 import { PersistFirestoreReadProps } from "../model/PersistFirestoreReadProps"
+import { currentEnv } from "../util/CurrentEnv"
 import { BigQueryFirestoreReadAuditProvider } from "./providers/BigQueryFirestoreReadAuditProvider"
 import { FirestoreReadAuditProvider } from "./providers/FirestoreReadAuditProvider"
 import { PubSubFirestoreReadAuditProvider } from "./providers/PubSubFirestoreReadAuditProvider"
@@ -44,7 +45,7 @@ export class FirestoreReadAuditResolver {
 
             await this.provider.persistFirestoreRead({
                 ...props,
-                env: process.env.ENV || 'dev',
+                env: currentEnv,
                 insertAt: new Date().toISOString().slice(0, -1),
                 projectId: process.env.FIRESTORE_PROJECTID || '',
                 service: process.env.SERVICE || '',
