@@ -1,4 +1,4 @@
-import { Environment } from "roit-environment";
+import { isDebug } from "../../util/IsDebug";
 import { CacheProvider } from "./CacheProvider";
 
 import NodeCache from "node-cache";
@@ -10,7 +10,7 @@ export class InMemoryCacheProvider implements CacheProvider {
     getCacheResult(key: string): Promise<any | null> {
         const result = this.cache.get(key) as string | null
 
-        if (Boolean(Environment.getProperty('firestore.debug'))) {
+        if (isDebug) {
             if (result) {
                 console.debug('[DEBUG] Memory Caching >', `Return value in cache from key: ${key}`)
             } else {
@@ -32,7 +32,7 @@ export class InMemoryCacheProvider implements CacheProvider {
 
     saveCacheResult(key: string, valueToCache: any, ttl: number): Promise<void> {
         this.cache.set(key, valueToCache, ttl || 0)
-        if (Boolean(Environment.getProperty('firestore.debug'))) {
+        if (isDebug) {
             console.debug('[DEBUG] Memory Caching >', `Storage cache from key: ${key}`)
         }
         return Promise.resolve()

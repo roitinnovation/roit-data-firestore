@@ -1,13 +1,13 @@
 // import { CreateFunction } from '../src/query/operator/CreateFunction';
 // import { User } from './example/model/User';
-import { Env, Environment } from 'roit-environment';
 import { Repository1 } from './example/Repository1';
 import { DynamicRepo } from './example/DynamicRepo';
 import { User } from './example/model/User';
 
 jest.setTimeout(50000)
 
-Environment.envOptions({ manuallyEnv: Env.TEST })
+process.env.ENV = 'test'
+
 describe('TesteExample tests', () => {
 
   it('create simple test', async () => {

@@ -1,0 +1,1 @@
+export const currentEnv = process.env.ENV || 'dev'

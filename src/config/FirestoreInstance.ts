@@ -1,5 +1,4 @@
 import { Firestore } from "@google-cloud/firestore";
-import { Env, Environment } from 'roit-environment';
 import { RepositorySystemException } from "../exception/RepositorySystemException";
 
 export class FirestoreInstance {
@@ -9,12 +8,11 @@ export class FirestoreInstance {
     private firestore: Firestore;
 
     constructor() {
+        if (process.env.ENV === 'test') { return }
 
-        if(Environment.acceptedEnv(Env.TEST)) { return }
+        const projectId = process.env.FIRESTORE_PROJECTID || process.env.PROJECT_ID
 
-        const projectId = Environment.getProperty("firestore.projectId") || Environment.systemProperty("PROJECT_ID")
-
-        if(!projectId) {
+        if (!projectId && !process.env.JEST_WORKER_ID) {
             throw new RepositorySystemException(`ProjectId is required in env.yaml {firestore.projectId}`)
         }
 
@@ -23,8 +21,8 @@ export class FirestoreInstance {
                 projectId
             })
             this.firestore.settings({ 
-                ignoreUndefinedProperties: Boolean(Environment.getProperty("firestore.ignoreUndefinedProperties") || false), 
-                databaseId: Environment.getProperty("firestore.databaseId")
+                ignoreUndefinedProperties: Boolean(process.env.FIRESTORE_IGNOREUNDEFINEDPROPERTIES || false), 
+                databaseId: process.env.FIRESTORE_DATABASEID
             });
         } catch (err) {
             console.error(err)

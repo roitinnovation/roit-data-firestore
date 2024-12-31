@@ -1,0 +1,1 @@
+export const isDebug = Boolean(process.env.FIRESTORE_DEBUG)

@@ -1,8 +1,9 @@
 import { CacheableOptions } from "../model/CacheableOptions"
 import { CacheProvider, InMemoryCacheProvider } from "./providers"
-import { Environment } from "roit-environment"
 import { RedisCacheProvider } from "./providers/RedisCacheProvider"
 import { CacheProviders } from "../model/CacheProviders"
+import { currentEnv } from "../util/CurrentEnv"
+import { isDebug } from "../util/IsDebug"
 
 export class CacheResolver {
 
@@ -32,11 +33,11 @@ export class CacheResolver {
     }
 
     private buildKey(repositoryClassName: string, methodSignature: string, ...paramValue: any[]) {
-        return `${Environment.currentEnv()}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
+        return `${currentEnv}:${repositoryClassName}:${methodSignature}:${paramValue.join(',')}`
     }
 
     public buildRepositoryKey(repositoryClassName: string) {
-        return `${Environment.currentEnv()}:${repositoryClassName}`
+        return `${currentEnv}:${repositoryClassName}`
     }
 
     async getCacheResult(repositoryClassName: string, methodSignature: string, ...paramValue: any[]): Promise<any | null | any[]> {
@@ -58,7 +59,7 @@ export class CacheResolver {
         const keys = await this.cacheProvider.getKeys(`${key}`)
         if (keys && Array.isArray(keys)) {
             for (const key of keys) {
-                if (Boolean(Environment.getProperty('firestore.debug'))) {
+                if (isDebug) {
                     console.debug('[DEBUG] Caching >', `Removing key: ${key}`)
                 }
                 await this.cacheProvider.delete(key)
