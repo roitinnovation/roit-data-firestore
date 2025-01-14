@@ -1,53 +1,68 @@
 aggregation(config) {
     return __awaiter(this, void 0, void 0, function* () {
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
-        const environmentUtil = global.instances.environmentUtil;
-        const convertToMQuery = global.instances.convertToMQuery;
-        const aggregateAverage = global.instances.aggregateAverage;
-        const aggregateSum = global.instances.aggregateSum;
-        const aggregateCount = global.instances.aggregateCount;
-        if (environmentUtil.areWeTesting()) {
-            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
-            return {};
-        }
-        const collection = db.collection('<COLLECTION_REPLACE>');
-        let queryList;
-        let queryExecute;
-        if ((config === null || config === void 0 ? void 0 : config.query) && config.query.length > 0) {
-            queryList = config.query.map(query => {
-                if (Object.keys(query).length === 1) {
-                    return convertToMQuery(query);
+        return yield global.instances.startTracer('firestore.aggregation', async (span) => {
+            try {
+                const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+                const environmentUtil = global.instances.environmentUtil;
+                const convertToMQuery = global.instances.convertToMQuery;
+                const aggregateAverage = global.instances.aggregateAverage;
+                const aggregateSum = global.instances.aggregateSum;
+                const aggregateCount = global.instances.aggregateCount;
+                if (environmentUtil.areWeTesting()) {
+                    console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+                    return {};
                 }
-                return query;
-            });
-            const queryInit = queryList[0];
-            queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value);
-            queryList.shift();
-            queryList.forEach(que => {
-                queryExecute = queryExecute.where(que.field, que.operator, que.value);
-            });
-        }
-        else {
-            queryExecute = collection;
-        }
-        let aggregateObject = {};
-        config.aggregations.forEach(item => {
-            if (item.type == 'average') {
-                aggregateObject[item.field] = aggregateAverage(item.field);
+                const collection = db.collection('<COLLECTION_REPLACE>');
+                let queryList;
+                let queryExecute;
+                if ((config === null || config === void 0 ? void 0 : config.query) && config.query.length > 0) {
+                    queryList = config.query.map(query => {
+                        if (Object.keys(query).length === 1) {
+                            return convertToMQuery(query);
+                        }
+                        return query;
+                    });
+                    const queryInit = queryList[0];
+                    queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value);
+                    queryList.shift();
+                    queryList.forEach(que => {
+                        queryExecute = queryExecute.where(que.field, que.operator, que.value);
+                    });
+                }
+                else {
+                    queryExecute = collection;
+                }
+                let aggregateObject = {};
+                config.aggregations.forEach(item => {
+                    if (item.type == 'average') {
+                        aggregateObject[item.field] = aggregateAverage(item.field);
+                    }
+                    if (item.type == 'sum') {
+                        aggregateObject[item.field] = aggregateSum(item.field);
+                    }
+                    if (item.type == 'count') {
+                        aggregateObject[item.field] = aggregateCount();
+                    }
+                });
+                const averageAggregateQuery = queryExecute.aggregate(aggregateObject);
+                const snapshot = yield averageAggregateQuery.get();
+                let resultBuilder = {};
+                config.aggregations.forEach(item => {
+                    resultBuilder[item.field] = snapshot.data()[item.field];
+                });
+                span.setAttributes({
+                    'firestore.operation.name': 'aggregation',
+                    'firestore.collection.name': '<COLLECTION_REPLACE>'
+                })
+                return resultBuilder;
+            } catch (error) {
+                span.setStatus({
+                    code: 2,
+                    message: error.message
+                })
+                span.recordException(error)
+                throw error
             }
-            if (item.type == 'sum') {
-                aggregateObject[item.field] = aggregateSum(item.field);
-            }
-            if (item.type == 'count') {
-                aggregateObject[item.field] = aggregateCount();
-            }
-        });
-        const averageAggregateQuery = queryExecute.aggregate(aggregateObject);
-        const snapshot = yield averageAggregateQuery.get();
-        let resultBuilder = {};
-        config.aggregations.forEach(item => {
-            resultBuilder[item.field] = snapshot.data()[item.field];
-        });
-        return resultBuilder;
+        })
     });
 }

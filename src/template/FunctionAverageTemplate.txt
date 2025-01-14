@@ -1,37 +1,52 @@
 average(config) {
     return __awaiter(this, void 0, void 0, function* () {
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
-        const environmentUtil = global.instances.environmentUtil;
-        const convertToMQuery = global.instances.convertToMQuery;
-        const aggregateAverage = global.instances.aggregateAverage;
-        if (environmentUtil.areWeTesting()) {
-            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
-            return 0;
-        }
-        const collection = db.collection('<COLLECTION_REPLACE>');
-        let queryList;
-        let queryExecute;
-        if ((config === null || config === void 0 ? void 0 : config.query) && config.query.length > 0) {
-            queryList = config.query.map(query => {
-                if (Object.keys(query).length === 1) {
-                    return convertToMQuery(query);
+        return yield global.instances.startTracer('firestore.findById', async (span) => {
+            try {
+                const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+                const environmentUtil = global.instances.environmentUtil;
+                const convertToMQuery = global.instances.convertToMQuery;
+                const aggregateAverage = global.instances.aggregateAverage;
+                if (environmentUtil.areWeTesting()) {
+                    console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+                    return 0;
                 }
-                return query;
-            });
-            const queryInit = queryList[0];
-            queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value);
-            queryList.shift();
-            queryList.forEach(que => {
-                queryExecute = queryExecute.where(que.field, que.operator, que.value);
-            });
-        }
-        else {
-            queryExecute = collection;
-        }
-        const averageAggregateQuery = queryExecute.aggregate({
-            average: aggregateAverage(config.attributeAvg),
-        });
-        const snapshot = yield averageAggregateQuery.get();
-        return snapshot.data().average;
+                const collection = db.collection('<COLLECTION_REPLACE>');
+                let queryList;
+                let queryExecute;
+                if ((config === null || config === void 0 ? void 0 : config.query) && config.query.length > 0) {
+                    queryList = config.query.map(query => {
+                        if (Object.keys(query).length === 1) {
+                            return convertToMQuery(query);
+                        }
+                        return query;
+                    });
+                    const queryInit = queryList[0];
+                    queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value);
+                    queryList.shift();
+                    queryList.forEach(que => {
+                        queryExecute = queryExecute.where(que.field, que.operator, que.value);
+                    });
+                }
+                else {
+                    queryExecute = collection;
+                }
+                const averageAggregateQuery = queryExecute.aggregate({
+                    average: aggregateAverage(config.attributeAvg),
+                });
+                const snapshot = yield averageAggregateQuery.get();
+                span.setAttributes({
+                    'firestore.operation.name': 'average',
+                    'firestore.collection.name': '<COLLECTION_REPLACE>'
+                })                 
+                return snapshot.data().average;
+            } catch (error) {
+               span.setStatus({
+                    code: 2,
+                    message: error.message
+                })
+                span.recordException(error)
+                throw error
+            }
+        })
     });
 }

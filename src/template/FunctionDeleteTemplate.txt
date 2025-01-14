@@ -1,29 +1,45 @@
 delete(ids) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!ids) {
-            throw new RepositoryBusinessException_1.RepositoryBusinessException(`Id is required`, []);
-        }
-        if (!Array.isArray(ids)) {
-            ids = [ids];
-        }
-        if (ids.length > 500) {
-            throw new RepositoryBusinessException_1.RepositoryBusinessException(`To perform the delete, the maximum number of elements is 500, size current: ${ids.length}`, []);
-        }
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
-        const environmentUtil = global.instances.environmentUtil;
-        const batch = db.batch();
-        const collection = db.collection('<COLLECTION_REPLACE>');
-        ids.forEach(id => {
-            const docRef = collection.doc(id);
-            batch.delete(docRef);
-        });
-        if (!environmentUtil.areWeTesting()) {
-            yield batch.commit();
-            yield this.revokeCache();
-        }
-        else {
-            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
-        }
-        return ids;
+        return yield global.instances.startTracer('firestore.delete', async (span) => {
+            try {
+                if (!ids) {
+                    throw new RepositoryBusinessException_1.RepositoryBusinessException(`Id is required`, []);
+                }
+                if (!Array.isArray(ids)) {
+                    ids = [ids];
+                }
+                if (ids.length > 500) {
+                    throw new RepositoryBusinessException_1.RepositoryBusinessException(`To perform the delete, the maximum number of elements is 500, size current: ${ids.length}`, []);
+                }
+                const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+                const environmentUtil = global.instances.environmentUtil;
+                const batch = db.batch();
+                const collection = db.collection('<COLLECTION_REPLACE>');
+                ids.forEach(id => {
+                    const docRef = collection.doc(id);
+                    batch.delete(docRef);
+                });
+                if (!environmentUtil.areWeTesting()) {
+                    yield batch.commit();
+                    yield this.revokeCache();
+                }
+                else {
+                    console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+                }
+                span.setAttributes({
+                    'firestore.operation.name': 'delete',
+                    'firestore.collection.name': '<COLLECTION_REPLACE>',
+                    'firestore.collection.id': JSON.stringify(ids)
+                })
+                return ids;
+            } catch (error) {
+                span.setStatus({
+                    code: 2,
+                    message: error.message
+                })
+                span.recordException(error)
+                throw error
+            }
+        })
     });
 }

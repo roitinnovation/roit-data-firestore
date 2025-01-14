@@ -1,53 +1,71 @@
  async function(<params_replace>) {
-        if(<params_validator_replace>) throw new Error('All parameters required, ref..: <params_replace>')
+    return yield global.instances.startTracer('firestore.query', async (span) => {
+        try {
+            if(<params_validator_replace>) throw new Error('All parameters required, ref..: <params_replace>')
 
-        let repositoryClassName = '<repositoryClassName_value>'
-        let methodSignature = '<methodSignature_value>'
+            let repositoryClassName = '<repositoryClassName_value>'
+            let methodSignature = '<methodSignature_value>'
 
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance()
-        const cacheResolver = global.instances.cacheResolver
-        const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver
+            const db = global.instances.globalDbFile.FirestoreInstance.getInstance()
+            const cacheResolver = global.instances.cacheResolver
+            const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver
 
-        const environmentUtil = global.instances.environmentUtil
-        if(environmentUtil.areWeTesting()) { 
-            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
-            return []
+            const environmentUtil = global.instances.environmentUtil
+            if(environmentUtil.areWeTesting()) { 
+                console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed')
+                return []
+            }
+            
+            const result = await cacheResolver.getCacheResult(repositoryClassName, methodSignature, <params_replace>)
+            
+            if(result) {
+                return result
+            }
+
+            const collection = db.collection('<collection_name_replace>')
+
+            if(Number(process.env.FIRESTORE_DEBUG)) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
+
+            let collectionRef = collection<query_predicate_replace>
+            let { documentRef } = await global.instances.queryCreatorConfig.buildPaging(collectionRef, paging, { showCount: false })
+            const snapshot = await documentRef.get()
+
+            let items = []
+            snapshot.forEach(doc => { 
+                let element = { ...doc.data() }
+                element.id = doc.id
+                items.push(element)
+            })
+
+            await cacheResolver.cacheResult(repositoryClassName, methodSignature, items, <params_replace>)
+
+            await firestoreReadAuditResolver.persistFirestoreRead({
+                collection: '<collection_name_replace>',
+                repositoryClassName: repositoryClassName,
+                functionSignature: methodSignature,
+                params: <params_replace>,
+                queryResult: items
+            })
+
+            span.setAttributes({
+                'firestore.operation.name': 'query',
+                'firestore.collection.name': '<COLLECTION_REPLACE>',
+                'firestore.operation.size': items.length
+            })             
+
+            if(<is_one_row>) {
+                return items[0]
+            }        
+
+            return items
+
+        } catch (error) {
+            span.setStatus({
+                code: 2,
+                message: error.message
+            })
+            span.recordException(error)
+            throw error
         }
-        
-        const result = await cacheResolver.getCacheResult(repositoryClassName, methodSignature, <params_replace>)
-        
-        if(result) {
-            return result
-        }
-
-        const collection = db.collection('<collection_name_replace>')
-
-        if(Number(process.env.FIRESTORE_DEBUG)) { console.debug('[DEBUG] Executing query >', "<query_predicate_replace>") }
-
-        let collectionRef = collection<query_predicate_replace>
-        let { documentRef } = await global.instances.queryCreatorConfig.buildPaging(collectionRef, paging, { showCount: false })
-        const snapshot = await documentRef.get()
-
-        let items = []
-        snapshot.forEach(doc => { 
-            let element = { ...doc.data() }
-            element.id = doc.id
-            items.push(element)
-        })
-
-        await cacheResolver.cacheResult(repositoryClassName, methodSignature, items, <params_replace>)
-
-        await firestoreReadAuditResolver.persistFirestoreRead({
-            collection: '<collection_name_replace>',
-            repositoryClassName: repositoryClassName,
-            functionSignature: methodSignature,
-            params: <params_replace>,
-            queryResult: items
-        })
-
-        if(<is_one_row>) {
-            return items[0]
-        }        
-
-        return items
+    })
 }

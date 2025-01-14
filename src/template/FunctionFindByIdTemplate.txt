@@ -1,30 +1,46 @@
 findById(id) {
     return __awaiter(this, void 0, void 0, function* () {
-        let repositoryClassName = '';
-        let methodSignature = '';
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
-        const cacheResolver = global.instances.cacheResolver;
-        const result = yield cacheResolver.getCacheResult(repositoryClassName, methodSignature, id);
-        if (result) {
-            return result;
-        }
-        const collection = db.collection('<COLLECTION_REPLACE>');
-        const environmentUtil = global.instances.environmentUtil;
-        if (environmentUtil.areWeTesting()) {
-            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
-            return undefined;
-        }
-        const response = yield collection.doc(id).get();
-        const item = response.data();
-        yield cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id);
-        const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
-        yield firestoreReadAuditResolver.persistFirestoreRead({
-            collection: '<COLLECTION_REPLACE>',
-            repositoryClassName,
-            functionSignature: methodSignature,
-            params: id,
-            queryResult: item
-        });
-        return item;
+        return yield global.instances.startTracer('firestore.findById', async (span) => {
+            try {
+                let repositoryClassName = '';
+                let methodSignature = '';
+                const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+                const cacheResolver = global.instances.cacheResolver;
+                const result = yield cacheResolver.getCacheResult(repositoryClassName, methodSignature, id);
+                if (result) {
+                    return result;
+                }
+                const collection = db.collection('<COLLECTION_REPLACE>');
+                const environmentUtil = global.instances.environmentUtil;
+                if (environmentUtil.areWeTesting()) {
+                    console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+                    return undefined;
+                }
+                const response = yield collection.doc(id).get();
+                const item = response.data();
+                yield cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id);
+                const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
+                yield firestoreReadAuditResolver.persistFirestoreRead({
+                    collection: '<COLLECTION_REPLACE>',
+                    repositoryClassName,
+                    functionSignature: methodSignature,
+                    params: id,
+                    queryResult: item
+                });
+                span.setAttributes({
+                    'firestore.operation.name': 'findById',
+                    'firestore.collection.name': '<COLLECTION_REPLACE>',
+                    'firestore.collection.id': id
+                }) 
+                return item;
+            } catch (error) {
+                span.setStatus({
+                    code: 2,
+                    message: error.message
+                })
+                span.recordException(error)
+                throw error
+            }
+        })
     });
 }

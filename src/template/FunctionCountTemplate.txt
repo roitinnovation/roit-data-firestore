@@ -1,33 +1,57 @@
 count(config) {
     return __awaiter(this, void 0, void 0, function* () {
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
-        const environmentUtil = global.instances.environmentUtil;
-        const convertToMQuery = global.instances.convertToMQuery;
-        if (environmentUtil.areWeTesting()) {
-            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
-            return 0;
-        }
-        const collection = db.collection('<COLLECTION_REPLACE>');
-        let queryList;
-        let queryExecute;
-        if ((config === null || config === void 0 ? void 0 : config.query) && config.query.length > 0) {
-            queryList = config.query.map(query => {
-                if (Object.keys(query).length === 1) {
-                    return convertToMQuery(query);
+        return yield global.instances.startTracer('firestore.count', async (span) => {
+            try {
+                const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+                const environmentUtil = global.instances.environmentUtil;
+                const convertToMQuery = global.instances.convertToMQuery;
+                if (environmentUtil.areWeTesting()) {
+                    console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+                    return 0;
                 }
-                return query;
-            });
-            const queryInit = queryList[0];
-            queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value);
-            queryList.shift();
-            queryList.forEach(que => {
-                queryExecute = queryExecute.where(que.field, que.operator, que.value);
-            });
-        }
-        else {
-            queryExecute = collection;
-        }
-        const snapshot = yield queryExecute.count().get();
-        return snapshot.data().count;
+                const collection = db.collection('<COLLECTION_REPLACE>');
+                let queryList;
+                let queryExecute;
+                const traceQuery = []
+                const pushTraceQuery = (query) => {
+                    traceQuery.push({ field: query.field, operator: query.operator, value: '?' })
+                }
+                if ((config === null || config === void 0 ? void 0 : config.query) && config.query.length > 0) {
+                    queryList = config.query.map(query => {
+                        if (Object.keys(query).length === 1) {
+                            return convertToMQuery(query);
+                        }
+                        return query;
+                    });
+                    const queryInit = queryList[0];
+                    queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value);
+                    pushTraceQuery(queryInit)
+                    queryList.shift();
+                    queryList.forEach(que => {
+                        queryExecute = queryExecute.where(que.field, que.operator, que.value);
+                        pushTraceQuery(que)
+                    });
+                }
+                else {
+                    queryExecute = collection;
+                }
+                const snapshot = yield queryExecute.count().get();
+                const count = snapshot.data().count;
+                span.setAttributes({
+                    'firestore.operation.name': 'count',
+                    'firestore.operation.query': JSON.stringify(traceQuery),
+                    'firestore.collection.name': '<COLLECTION_REPLACE>',
+                    'firestore.operation.result.size': count,
+                })
+                return count;
+            } catch (error) {
+                span.setStatus({
+                    code: 2,
+                    message: error.message
+                })
+                span.recordException(error)
+                throw error
+            }
+        })
     });
 }

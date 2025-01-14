@@ -1,35 +1,51 @@
 findAll(paging) {
     return __awaiter(this, void 0, void 0, function* () {
-        let repositoryClassName = '';
-        let methodSignature = '';
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
-        const cacheResolver = global.instances.cacheResolver;
-        const result = yield cacheResolver.getCacheResult(repositoryClassName, methodSignature, 'Any');
-        if (result) {
-            return result;
-        }
-        const queryCreatorConfig = global.instances.queryCreatorConfig;
-        const collection = db.collection('<COLLECTION_REPLACE>');
-        const environmentUtil = global.instances.environmentUtil;
-        if (environmentUtil.areWeTesting()) {
-            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
-            return [];
-        }
-        let { documentRef } = yield queryCreatorConfig.buildPaging(collection, paging, { showCount: false });
-        const snapshot = yield documentRef.get();
-        let items = new Array;
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            items.push(Object.assign({}, data));
-        });
-        yield cacheResolver.cacheResult(repositoryClassName, methodSignature, items, 'Any');
-        const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
-        yield firestoreReadAuditResolver.persistFirestoreRead({
-            collection: '<COLLECTION_REPLACE>',
-            repositoryClassName,
-            functionSignature: methodSignature,
-            queryResult: items
-        });
-        return items;
+        return yield global.instances.startTracer('firestore.findAll', async (span) => {
+            try {
+                let repositoryClassName = '';
+                let methodSignature = '';
+                const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+                const cacheResolver = global.instances.cacheResolver;
+                const result = yield cacheResolver.getCacheResult(repositoryClassName, methodSignature, 'Any');
+                if (result) {
+                    return result;
+                }
+                const queryCreatorConfig = global.instances.queryCreatorConfig;
+                const collection = db.collection('<COLLECTION_REPLACE>');
+                const environmentUtil = global.instances.environmentUtil;
+                if (environmentUtil.areWeTesting()) {
+                    console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+                    return [];
+                }
+                let { documentRef } = yield queryCreatorConfig.buildPaging(collection, paging, { showCount: false });
+                const snapshot = yield documentRef.get();
+                let items = new Array;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    items.push(Object.assign({}, data));
+                });
+                yield cacheResolver.cacheResult(repositoryClassName, methodSignature, items, 'Any');
+                const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
+                yield firestoreReadAuditResolver.persistFirestoreRead({
+                    collection: '<COLLECTION_REPLACE>',
+                    repositoryClassName,
+                    functionSignature: methodSignature,
+                    queryResult: items
+                });
+                span.setAttributes({
+                    'firestore.operation.name': 'findAll',
+                    'firestore.collection.name': '<COLLECTION_REPLACE>',
+                    'firestore.operation.size': items.length
+                })                 
+                return items;
+            } catch (error) {
+                span.setStatus({
+                    code: 2,
+                    message: error.message
+                })
+                span.recordException(error)
+                throw error
+            }
+        })
     });
 }
