@@ -5,7 +5,6 @@ import { FirestoreReadAuditResolver } from '../firestore-read-audit/FirestoreRea
 import { QueryPredicate } from "../model/QueryPredicate";
 import { RepositoryOptions } from "../model/RepositoryOptions";
 import { EnvironmentUtil } from '../util/EnvironmentUtil';
-// import { CreateFunction } from "./operator/CreateFunction";
 import { QueryCreatorConfig } from './QueryCreatorConfig';
 import { QueryOptions } from '../decorators/Query';
 import { AggregateField, FieldValue } from '@google-cloud/firestore';
@@ -17,6 +16,7 @@ import classValidator from 'class-validator'
 import * as uuid from 'uuid'
 import fs  from 'fs'
 import path  from 'path'
+import { startTracer } from '../tracer/Tracer';
 
 const functionQueryTemplate = fs.readFileSync(path.resolve(__dirname, '../template/FunctionQueryTemplate.txt'), 'utf8')
 
@@ -59,7 +59,8 @@ export class QueryPredicateFunctionTransform {
             convertToMQuery: ManualQueryHelper.convertToMQuery,
             aggregateAverage: AggregateField.average,
             aggregateSum: AggregateField.sum,
-            aggregateCount: AggregateField.count
+            aggregateCount: AggregateField.count,
+            startTracer: startTracer
         }
 
         if (!options?.collection) {
@@ -72,14 +73,8 @@ export class QueryPredicateFunctionTransform {
 
         this.prototypeRegister.set(modelName, options.validateModel.prototype)
 
-        // const target = getMetadataStorage()['validationMetadatas'].find((valu: any) => String(valu.target).includes(modelName))
-
-        // console.log(getMetadataStorage()['validationMetadatas'].map((valu: any) => String(valu.target)))
-
         const instance = Object.create(options.validateModel)
         this.schemaRegister.set(modelName, targetConstructorToSchema(instance))
-
-        // const func = new CreateFunction().createFunction(methodSignature)
 
         if (methodSignature in methodList) {
             

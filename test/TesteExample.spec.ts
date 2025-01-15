@@ -1,5 +1,3 @@
-// import { CreateFunction } from '../src/query/operator/CreateFunction';
-// import { User } from './example/model/User';
 import { Repository1 } from './example/Repository1';
 import { DynamicRepo } from './example/DynamicRepo';
 import { User } from './example/model/User';
