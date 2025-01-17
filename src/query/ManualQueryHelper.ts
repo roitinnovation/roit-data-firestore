@@ -37,6 +37,11 @@ export class ManualQueryHelper {
                 }
         
                 const repositoryOptions: RepositoryOptions | undefined = QueryPredicateFunctionTransform.classConfig.get(className)
+
+                const traceQuery: Array<any> = []
+                const pushTraceQuery = (query: any) => {
+                    traceQuery.push({ field: query.field, operator: query.operator, value: '?' })
+                }
         
                 if (repositoryOptions) {
                     const firestoreInstance: Firestore = FirestoreInstance.getInstance()
@@ -59,11 +64,13 @@ export class ManualQueryHelper {
                         const queryInit = queryList[0]
         
                         queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value)
+                        pushTraceQuery(queryInit)
         
                         queryList.shift()
         
                         queryList.forEach(que => {
                             queryExecute = queryExecute!.where(que.field, que.operator, que.value)
+                            pushTraceQuery(que)
                         })
                     }
         
@@ -115,6 +122,7 @@ export class ManualQueryHelper {
 
                         span.setAttributes({
                             'firestore.operation.name': 'query',
+                            'firestore.operation.query': JSON.stringify(traceQuery),
                             'firestore.collection.name': repositoryOptions.collection,
                             'firestore.operation.size': data.length,
                         })                         
