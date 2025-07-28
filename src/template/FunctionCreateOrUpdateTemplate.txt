@@ -33,6 +33,9 @@ createOrUpdate(items) {
                     item.updateTimestampAt = new Date(item.updateAt).getTime();
                     item.lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED';
                     const docRef = collection.doc(item.id);
+                    if (ttlExpirationIn && item?.ttlExpirationAt) {
+                        delete item.ttlExpirationAt;
+                    }
                     batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true });
                     if (ttlExpirationIn && ttlUnit) {
                         const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
