@@ -1,7 +1,6 @@
 import { Storage } from '@google-cloud/storage';
 import * as zlib from 'zlib';
 import { Writable } from 'stream';
-import { Environment } from 'roit-environment';
 import { ArchiveConfig } from '../config/ArchiveConfig';
 import { CacheResolver } from '../cache/CacheResolver';
 import { CacheProviders } from '../model/CacheProviders';
@@ -21,7 +20,7 @@ export class ArchiveService {
   private projectId: string;
   private firestore: any;
   private isInitialized = false;
-  private isDebug = Boolean(Environment.getProperty('firestore.debug'));
+  private isDebug = Boolean(ArchiveConfig.getConfig().debug);
 
    /**
    * Construtor privado para prevenir instanciação direta
@@ -65,7 +64,7 @@ export class ArchiveService {
 
     this.config = ArchiveConfig.getConfig();
     this.cacheResolver = CacheResolver.getInstance();
-    this.projectId = Environment.getProperty('firestore.projectId');
+    this.projectId = this.config.projectId;
 
     if (this.isDebug) {
       console.log(`[ARCHIVE SERVICE] Configuração: ${JSON.stringify(this.config)}`);
@@ -89,7 +88,7 @@ export class ArchiveService {
     }
 
     this.storage = new Storage();
-    this.bucketName = this.config.bucketName || Environment.getProperty('bucket_name');
+    this.bucketName = this.config.bucketName;
 
     if (!this.bucketName) {
       console.warn('ArchiveService: bucket_name não configurado');
@@ -112,6 +111,7 @@ export class ArchiveService {
    * Verifica se um documento está arquivado
    */
   isDocumentArchived(documentData: any): boolean {
+    return true;
     if (!this.isEnabled()) {
       return false;
     }
@@ -178,7 +178,7 @@ export class ArchiveService {
 
     const docId = doc.id;
     // Verificar cache se habilitado
-    if (this.config.cacheArchivedData) {
+    if (this.config.cache.enabled) {
       const cacheKey = `archived_${collectionName}_${docId}`;
       const cachedData = await this.cacheResolver.getCacheResult('ArchiveService', 'getArchivedDocument', cacheKey);
       if (cachedData) {
@@ -195,7 +195,7 @@ export class ArchiveService {
    
       if (archivedData) {
         // Salvar no cache se habilitado
-        if (this.config.cacheArchivedData) {
+        if (this.config.cache.enabled) {
           const cacheKey = `archived_${collectionName}_${docId}`;
           await this.cacheResolver.cacheResult('ArchiveService', 'getArchivedDocument', archivedData, cacheKey);
           if (this.isDebug) {
@@ -217,7 +217,7 @@ export class ArchiveService {
    * Limpa o cache de documentos arquivados
    */
   async clearArchivedCache(collectionName?: string, docId?: string): Promise<void> {
-    if (!this.config.cacheArchivedData) {
+    if (!this.config.cache.enabled) {
       return;
     }
 
