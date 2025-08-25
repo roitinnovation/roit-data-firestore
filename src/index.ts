@@ -13,6 +13,7 @@ export { Cacheable } from "./decorators/Cacheable"
 export { BaseRepository } from "./config/BaseRepository"
 export { ReadonlyRepository } from "./config/ReadonlyRepository"
 export { GenericRepository } from "./config/GenericRepository"
+export { ArchiveConfig } from "./config/ArchiveConfig"
 
 export { CacheProviders } from "./model/CacheProviders"
 

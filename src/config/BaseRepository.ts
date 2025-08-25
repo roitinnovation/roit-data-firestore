@@ -1,4 +1,5 @@
 import { Query as QueryFs } from "@google-cloud/firestore";
+import { ArchiveService } from "../archive/ArchiveService";
 import { Query } from "../decorators/Query";
 import { QueryResult } from "../model";
 import { Aggregate } from "../model/Aggregate";
@@ -80,4 +81,14 @@ export abstract class BaseRepository<T> {
 
     @Query()
     aggregation: (config: { query?: Array<MQuery | MQuerySimple>, aggregations: Array<Aggregate> }) => Promise<{ [k: string]: string | number }>
+
+    /**
+     * Limpa o cache de documentos arquivados
+     * @param collectionName Nome da collection (opcional)
+     * @param docId ID do documento (opcional)
+     */
+    async clearArchivedCache(collectionName?: string, docId?: string): Promise<void> {
+        const archiveService = await ArchiveService.getInstance();
+        await archiveService.clearArchivedCache(collectionName, docId);
+    }
 }

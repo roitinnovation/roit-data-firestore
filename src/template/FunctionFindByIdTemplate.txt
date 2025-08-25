@@ -6,6 +6,7 @@ findById(id) {
                 let methodSignature = '';
                 const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
                 const cacheResolver = global.instances.cacheResolver;
+                const archiveService = yield global.instances.archiveService;
                 const result = yield cacheResolver.getCacheResult(repositoryClassName, methodSignature, id);
                 if (result) {
                     return result;
@@ -18,7 +19,16 @@ findById(id) {
                 }
                 const response = yield collection.doc(id).get();
                 const item = response.data();
-                yield cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id);
+                // VERIFICAÇÃO DE ARQUIVAMENTO
+                if (item && archiveService.isDocumentArchived(item)) {
+                    const archivedData = yield archiveService.getArchivedDocument('<COLLECTION_REPLACE>', item);
+                    if (archivedData) {
+                        const completeData = { ...item, ...archivedData };
+                        yield cacheResolver.cacheResult(repositoryClassName, methodSignature, completeData, id);
+                    }
+                } else {
+                    yield cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id);
+                }
                 const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
                 yield firestoreReadAuditResolver.persistFirestoreRead({
                     collection: '<COLLECTION_REPLACE>',
