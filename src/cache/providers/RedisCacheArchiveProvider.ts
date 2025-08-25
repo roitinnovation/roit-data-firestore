@@ -1,12 +1,10 @@
 import { CacheProvider } from "./CacheProvider";
-import { Environment } from "roit-environment";
 import { PlatformTools } from "../../platform/PlatformTools";
 import { timeout as promiseTimeout } from "promise-timeout";
+import { ArchiveConfig } from "../../config/ArchiveConfig";
 
-const REDIS_TIMEOUT =
-    Environment.getProperty('firestore.cache.archive.timeout') as unknown as number || 2000
-const REDIS_RECONNECT: number =
-    Environment.getProperty('firestore.cache.archive.reconnectInSecondsAfterTimeout') as unknown as number || 30
+const REDIS_TIMEOUT = ArchiveConfig.getConfig().cache.timeout
+const REDIS_RECONNECT: number = ArchiveConfig.getConfig().cache.reconnectInSecondsAfterTimeout
 
 export class RedisCacheArchiveProvider implements CacheProvider {
 
@@ -21,11 +19,11 @@ export class RedisCacheArchiveProvider implements CacheProvider {
     private client: any
 
     private isRedisReady = false;
-    private isDebug = Boolean(Environment.getProperty('firestore.debug'));
+    private isDebug = Boolean(ArchiveConfig.getConfig().debug);
 
     constructor() {
         if (!this.redis) {
-            const url = Environment.getProperty('firestore.cache.archive.redisUrl')
+            const url = ArchiveConfig.getConfig().cache.redisUrl
 
             if (!url) {
                 console.error(`[ERROR] Redis Caching > environtment variable "firestore.cache.archive.redisUrl" was not found!`)
@@ -112,7 +110,7 @@ export class RedisCacheArchiveProvider implements CacheProvider {
         if (this.isRedisReady) {
             try {
                 await promiseTimeout(this.client.set(key, JSON.stringify(valueToCache), {
-                    EX: ttl || 0
+                    EX: ttl || ArchiveConfig.getConfig().cache.expiresInSeconds
                 }), REDIS_TIMEOUT)     
                 if (this.isDebug) {
                     console.debug('[DEBUG] Redis Caching >', `Storage cache from key: ${key}`)

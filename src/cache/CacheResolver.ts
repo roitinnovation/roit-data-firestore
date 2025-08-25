@@ -6,7 +6,7 @@ import { currentEnv } from "../util/CurrentEnv"
 import { isDebug } from "../util/IsDebug"
 import { QueryPredicateFunctionTransform } from "../query/QueryPredicateFunctionTransform"
 import { RedisCacheArchiveProvider } from "./providers/RedisCacheArchiveProvider"
-import { Environment } from "roit-environment"
+import { ArchiveConfig } from "../config/ArchiveConfig"
 
 export class CacheResolver {
 
@@ -124,7 +124,7 @@ export class CacheResolver {
             }
     
             if (shouldDelete) {
-                if (Boolean(Environment.getProperty('firestore.debug'))) {
+                if (Boolean(ArchiveConfig.getConfig().debug)) {
                     console.debug('[DEBUG] Archive Cache >', `Removing key: ${key}`)
                 }
                 await this.cacheProvider.delete(key)
@@ -147,11 +147,11 @@ export class CacheResolver {
         const collectionName = repositoryOptions.collection
         
         // Revogar cache do archive para essa collection
-        const archiveKeys = await this.cacheProvider.getKeys(`${Environment.currentEnv()}:ArchiveService`)
+        const archiveKeys = await this.cacheProvider.getKeys(`${currentEnv}:ArchiveService`)
         if (archiveKeys && Array.isArray(archiveKeys)) {
             for (const key of archiveKeys) {
-                if (key.includes(`getArchivedDocument:archived_${collectionName}`)) {
-                    if (Boolean(Environment.getProperty('firestore.debug'))) {
+                if (key.includes(`getArchivedDocument:archived_${collectionName}`)) { 
+                    if (Boolean(ArchiveConfig.getConfig().debug)) {
                         console.debug('[DEBUG] Archive Cache >', `Removing archive key: ${key}`)
                     }
                     await this.cacheProvider.delete(key)
