@@ -6,6 +6,7 @@ findAll(paging) {
                 let methodSignature = '';
                 const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
                 const cacheResolver = global.instances.cacheResolver;
+                const archiveService = yield global.instances.archiveService;
                 const result = yield cacheResolver.getCacheResult(repositoryClassName, methodSignature, 'Any');
                 if (result) {
                     return result;
@@ -24,6 +25,24 @@ findAll(paging) {
                     const data = doc.data();
                     items.push(Object.assign({}, data));
                 });
+                // VERIFICAÇÃO DE ARQUIVAMENTO PARA MÚLTIPLOS DOCUMENTOS
+                const archivedItems = items.filter(item => archiveService.isDocumentArchived(item));
+                if (archivedItems.length > 0) {
+                    const recoveryPromises = archivedItems.map((item) => {
+                        return archiveService.getArchivedDocument('<COLLECTION_REPLACE>', item)
+                            .then(archivedData => archivedData ? { ...item, ...archivedData } : item);
+                    });
+                    
+                    const recoveredItems = yield Promise.all(recoveryPromises);
+                    
+                    // Substituir itens arquivados pelos recuperados
+                    items = items.map(item => {
+                        if (archiveService.isDocumentArchived(item)) {
+                            return recoveredItems.find(recovered => recovered.id === item.id) || item;
+                        }
+                        return item;
+                    });
+                }
                 yield cacheResolver.cacheResult(repositoryClassName, methodSignature, items, 'Any');
                 const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
                 yield firestoreReadAuditResolver.persistFirestoreRead({

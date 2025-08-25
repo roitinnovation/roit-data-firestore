@@ -17,6 +17,7 @@ import * as uuid from 'uuid'
 import fs  from 'fs'
 import path  from 'path'
 import { startTracer } from '../tracer/Tracer';
+import { ArchiveService } from '../archive/ArchiveService';
 
 const functionQueryTemplate = fs.readFileSync(path.resolve(__dirname, '../template/FunctionQueryTemplate.txt'), 'utf8')
 
@@ -60,7 +61,8 @@ export class QueryPredicateFunctionTransform {
             aggregateAverage: AggregateField.average,
             aggregateSum: AggregateField.sum,
             aggregateCount: AggregateField.count,
-            startTracer: startTracer
+            startTracer: startTracer,
+            archiveService: ArchiveService.getInstance()
         }
 
         if (!options?.collection) {
