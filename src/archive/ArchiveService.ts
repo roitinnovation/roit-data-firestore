@@ -111,7 +111,6 @@ export class ArchiveService {
    * Verifica se um documento está arquivado
    */
   isDocumentArchived(documentData: any): boolean {
-    return true;
     if (!this.isEnabled()) {
       return false;
     }
