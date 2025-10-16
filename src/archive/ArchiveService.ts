@@ -1,7 +1,7 @@
 import { Storage } from '@google-cloud/storage';
 import * as zlib from 'zlib';
 import { Writable } from 'stream';
-import { ArchiveConfig } from '../config/ArchiveConfig';
+import { ArchiveConfig, onDebugLog, onDebugWarn, DEBUG_PREFIX } from '../config/ArchiveConfig';
 import { CacheResolver } from '../cache/CacheResolver';
 import { CacheProviders } from '../model/CacheProviders';
 import { Firestore } from "@google-cloud/firestore";
@@ -20,7 +20,6 @@ export class ArchiveService {
   private projectId: string;
   private firestore: any;
   private isInitialized = false;
-  private isDebug = Boolean(ArchiveConfig.getConfig().debug);
 
    /**
    * Construtor privado para prevenir instanciação direta
@@ -66,9 +65,7 @@ export class ArchiveService {
     this.cacheResolver = CacheResolver.getInstance();
     this.projectId = this.config.projectId;
 
-    if (this.isDebug) {
-      console.log(`[ARCHIVE SERVICE] Configuração: ${JSON.stringify(this.config)}`);
-    }
+    onDebugLog(`Configuração: ${JSON.stringify(this.config)}`);
 
     if (!this.firestore) {
       this.firestore = new Firestore({
@@ -83,15 +80,17 @@ export class ArchiveService {
     });
 
     if (!this.config.enabled) {
-      console.log('ArchiveService: Arquivamento desabilitado');
+      onDebugLog('Arquivamento desabilitado');
       return;
-    }
+    } else {
+      this.storage = new Storage();
+      this.bucketName = this.config.bucketName;
 
-    this.storage = new Storage();
-    this.bucketName = this.config.bucketName;
-
-    if (!this.bucketName) {
-      console.warn('ArchiveService: bucket_name não configurado');
+      if (!this.bucketName) {
+        onDebugWarn('ArchiveService: bucket_name não configurado');
+      } else {
+        onDebugLog(`Bucket configurado: ${this.bucketName}`);
+      }
     }
   }
 
@@ -157,7 +156,7 @@ export class ArchiveService {
       const result = Buffer.concat(chunks).toString('utf-8');
       return JSON.parse(result);
     } catch (error) {
-      console.warn(`Erro ao recuperar documento JSON arquivado ${collectionName}/${docId}:`, error);
+      console.log(`${DEBUG_PREFIX} Erro ao recuperar documento JSON arquivado ${collectionName}/${docId}:`, error);
       return null;
     }
   }
@@ -171,7 +170,7 @@ export class ArchiveService {
     }
 
     if (!this.bucketName) {
-      console.warn('ArchiveService: bucket_name não configurado, não é possível recuperar documentos arquivados');
+      console.warn(`${DEBUG_PREFIX} ArchiveService: bucket_name não configurado, não é possível recuperar documentos arquivados`);
       return null;
     }
 
@@ -181,9 +180,7 @@ export class ArchiveService {
       const cacheKey = `archived_${collectionName}_${docId}`;
       const cachedData = await this.cacheResolver.getCacheResult('ArchiveService', 'getArchivedDocument', cacheKey);
       if (cachedData) {
-        if (this.isDebug) {
-          console.log(`Cache hit para documento arquivado: ${collectionName}/${docId}`);
-        }
+        onDebugLog(`Cache hit para documento arquivado: ${collectionName}/${docId}`);
         return cachedData;
       }
     }
@@ -197,16 +194,14 @@ export class ArchiveService {
         if (this.config.cache.enabled) {
           const cacheKey = `archived_${collectionName}_${docId}`;
           await this.cacheResolver.cacheResult('ArchiveService', 'getArchivedDocument', archivedData, cacheKey);
-          if (this.isDebug) {
-            console.log(`Documento arquivado cacheado: ${collectionName}/${docId}`);
-          }
+          onDebugLog(`Documento arquivado cacheado: ${collectionName}/${docId}`);
         }
 
         return archivedData;
       }
 
     } catch (error) {
-      console.warn(`Erro ao recuperar documento arquivado ${collectionName}/${docId}:`, error);
+      console.warn(`${DEBUG_PREFIX} Erro ao recuperar documento arquivado ${collectionName}/${docId}:`, error);
     }
 
     return null;
