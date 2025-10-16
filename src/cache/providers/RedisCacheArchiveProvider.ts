@@ -5,6 +5,7 @@ import { ArchiveConfig } from "../../config/ArchiveConfig";
 
 const REDIS_TIMEOUT = ArchiveConfig.getConfig().cache.timeout
 const REDIS_RECONNECT: number = ArchiveConfig.getConfig().cache.reconnectInSecondsAfterTimeout
+const REDIS_ENABLED = ArchiveConfig.getConfig().cache.enabled
 
 export class RedisCacheArchiveProvider implements CacheProvider {
 
@@ -22,11 +23,16 @@ export class RedisCacheArchiveProvider implements CacheProvider {
     private isDebug = Boolean(ArchiveConfig.getConfig().debug);
 
     constructor() {
-        if (!this.redis) {
+
+        if (this.isDebug) {
+            console.log('[DEBUG] Redis Caching Firestore Archive > Redis is enabled', REDIS_ENABLED)
+        }
+
+        if (!this.redis && REDIS_ENABLED) {
             const url = ArchiveConfig.getConfig().cache.redisUrl
 
             if (!url) {
-                console.error(`[ERROR] Redis Caching > environtment variable "firestore.cache.archive.redisUrl" was not found!`)
+                console.error(`[ERROR] Redis Caching > environtment variable "firestore.archive.cache.redisUrl" was not found!`)
                 return
             }
 
