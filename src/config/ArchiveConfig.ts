@@ -48,3 +48,22 @@ export class ArchiveConfig {
     };
   }
 }
+
+export const DEBUG_PREFIX = '[ARCHIVE SERVICE]';
+export const onDebugLog = (message: string) => {
+  if (ArchiveConfig.getConfig().debug) {
+    console.log(`${DEBUG_PREFIX} ${message}`);
+  }
+}
+
+export const onDebugError = (message: string, error: any) => {
+  if (ArchiveConfig.getConfig().debug) {
+    console.error(`${DEBUG_PREFIX} ${message}`, error);
+  }
+}
+
+export const onDebugWarn = (message: string) => {
+  if (ArchiveConfig.getConfig().debug) {
+    console.warn(`${DEBUG_PREFIX} ${message}`);
+  }
+}

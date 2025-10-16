@@ -1,7 +1,7 @@
 import { CacheProvider } from "./CacheProvider";
 import { PlatformTools } from "../../platform/PlatformTools";
 import { timeout as promiseTimeout } from "promise-timeout";
-import { ArchiveConfig } from "../../config/ArchiveConfig";
+import { ArchiveConfig, onDebugLog, onDebugWarn, DEBUG_PREFIX } from "../../config/ArchiveConfig";
 
 const REDIS_TIMEOUT = ArchiveConfig.getConfig().cache.timeout
 const REDIS_RECONNECT: number = ArchiveConfig.getConfig().cache.reconnectInSecondsAfterTimeout
@@ -20,19 +20,16 @@ export class RedisCacheArchiveProvider implements CacheProvider {
     private client: any
 
     private isRedisReady = false;
-    private isDebug = Boolean(ArchiveConfig.getConfig().debug);
 
     constructor() {
 
-        if (this.isDebug) {
-            console.log('[DEBUG] Redis Caching Firestore Archive > Redis is enabled', REDIS_ENABLED)
-        }
+        onDebugLog(`Redis Caching Firestore Archive > Redis is enabled ${REDIS_ENABLED}`);
 
         if (!this.redis && REDIS_ENABLED) {
             const url = ArchiveConfig.getConfig().cache.redisUrl
 
             if (!url) {
-                console.error(`[ERROR] Redis Caching > environtment variable "firestore.archive.cache.redisUrl" was not found!`)
+                console.error(`${DEBUG_PREFIX} [ERROR] Redis Caching > environtment variable "firestore.archive.cache.redisUrl" was not found!`)
                 return
             }
 
@@ -46,16 +43,12 @@ export class RedisCacheArchiveProvider implements CacheProvider {
 
             this.client.on('error', (err: any) => {
                 this.isRedisReady = false
-                if (this.isDebug) {
-                    console.warn('[WARN] Redis error', err)
-                }
+                onDebugWarn(`Redis error: ${err}`);
             });
 
             this.client.on('ready', () => {
                 this.isRedisReady = true
-                if (this.isDebug) {
-                    console.log('[DEBUG] Redis Caching Archive > Redis is ready')
-                }
+                onDebugLog('Redis Caching Archive > Redis is ready');
             })
 
             this.client.connect()
@@ -64,11 +57,11 @@ export class RedisCacheArchiveProvider implements CacheProvider {
 
     private handleTimeoutError(error: Error) {
         if (error.message === 'Timeout' && this.isRedisReady) {
-            console.log('Setting isRedisReady as false')
+            onDebugLog('Setting isRedisReady as false');
             this.isRedisReady = false;
             // Stop everything for a while to unburden Redis
             setTimeout(() => {
-                console.log('Setting isRedisReady as true')
+                onDebugLog('Setting isRedisReady as true');
                 this.isRedisReady = true;
             }, REDIS_RECONNECT * 1000)
         }
@@ -81,7 +74,7 @@ export class RedisCacheArchiveProvider implements CacheProvider {
             }
         } catch (error) {
             this.handleTimeoutError(error)
-            console.log(`[DEBUG] Redis Caching > Error when getting KEYS with query: ${query}, error: ${error}`)
+            console.log(`${DEBUG_PREFIX} Redis Caching > Error when getting KEYS with query: ${query}, error: ${error}`)
         }
         return Promise.resolve([])
     }
@@ -91,12 +84,10 @@ export class RedisCacheArchiveProvider implements CacheProvider {
             if (this.isRedisReady) {
                 const result: string = await promiseTimeout(this.client.get(key), REDIS_TIMEOUT)
         
-                if (this.isDebug) {
-                    if (result) {
-                        console.debug('[DEBUG] Redis Caching >', `Return value in cache from key: ${key}`)
-                    } else {
-                        console.log("[DEBUG] Redis Caching > ", `Key [${key}] is not found in the cache`)
-                    }
+                if (result) {
+                    onDebugLog(`Redis Caching > Return value in cache from key: ${key}`);
+                } else {
+                    onDebugLog(`Redis Caching > Key [${key}] is not found in the cache`);
                 }
         
                 if (result) {
@@ -107,7 +98,7 @@ export class RedisCacheArchiveProvider implements CacheProvider {
             }            
         } catch (error) {
             this.handleTimeoutError(error)
-            console.log(`[DEBUG] Redis Caching > Error when getting key from redis. ${key}`, { error })
+            console.log(`${DEBUG_PREFIX} Redis Caching > Error when getting key from redis. ${key}`, { error })
             return null
         }
     }
@@ -118,12 +109,10 @@ export class RedisCacheArchiveProvider implements CacheProvider {
                 await promiseTimeout(this.client.set(key, JSON.stringify(valueToCache), {
                     EX: ttl || ArchiveConfig.getConfig().cache.expiresInSeconds
                 }), REDIS_TIMEOUT)     
-                if (this.isDebug) {
-                    console.debug('[DEBUG] Redis Caching >', `Storage cache from key: ${key}`)
-                }
+                onDebugLog(`Redis Caching > Storage cache from key: ${key}`);
             } catch (error) {
                 this.handleTimeoutError(error)                
-                console.log(`[DEBUG] Redis Caching > Error when saving cache. Key: ${key}, value: ${valueToCache}, error: ${error}`)
+                console.log(`${DEBUG_PREFIX} Redis Caching > Error when saving cache. Key: ${key}, value: ${valueToCache}, error: ${error}`)
             }            
         }
     }
@@ -135,7 +124,7 @@ export class RedisCacheArchiveProvider implements CacheProvider {
             }            
         } catch (error) {
             this.handleTimeoutError(error)
-            console.log(`[DEBUG] Redis Caching > Error when deleting key from redis. ${key}`)
+            console.log(`${DEBUG_PREFIX} Redis Caching > Error when deleting key from redis. ${key}`)
         }
     }
 
