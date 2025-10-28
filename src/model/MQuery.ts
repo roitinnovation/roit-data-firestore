@@ -10,6 +10,10 @@ export class MQuery {
     value: any
 }
 
+export class MQueryOr {
+    or: Array<MQuery | MQuerySimple>
+}
+
 export class MQuerySimple {
     [key: string]: string | number;
 }
@@ -18,7 +22,7 @@ export class Config {
 
     orderBy?: OrderBy
 
-    query?: Array<MQuery | MQuerySimple>
+    query?: Array<MQuery | MQuerySimple | MQueryOr>
 
     select?: Array<string> = []
 
