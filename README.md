@@ -159,6 +159,7 @@ Ref: [Firstore Operators](https://firebase.google.com/docs/firestore/query-data/
 | OrderBy Desc       | findByNameAndOrderByNameDesc       | .where('name', '==', value).orderBy("name", "desc")|
 | OrderBy Asc        | findByNameAndOrderByNameAsc        | .where('name', '==', value).orderBy("name", "asc")|
 | Limit              | findByNameAndLimit10               | .where('name', '==', value).limit(10)        |
+| OR Queries         | Manual query with `or` property    | Filter.or(...) - See OR Queries section     |
 
 #### Example
 
@@ -269,6 +270,112 @@ export class Repository1 extends BaseRepository<User> {
     }
 }
 ```
+
+#### OR Queries
+
+The library supports OR queries using the `or` property within the query array. This allows you to create complex queries with multiple conditions using logical OR operations.
+
+##### Basic OR Query
+
+```
+findByStatusOrCategory(): Promise<Array<User>> {
+    return this.query({
+        query: [
+            {
+                or: [
+                    { field: 'status', operator: '==', value: 'active' },
+                    { field: 'status', operator: '==', value: 'pending' }
+                ]
+            }
+        ]
+    })
+}
+```
+
+##### OR with Simple Syntax
+
+```
+findByStatusOrCategory(): Promise<Array<User>> {
+    return this.query({
+        query: [
+            {
+                or: [
+                    { status: 'active' },
+                    { status: 'pending' }
+                ]
+            }
+        ]
+    })
+}
+```
+
+##### Combining AND and OR
+
+```
+findByCategoryAndStatusOrRating(): Promise<Array<User>> {
+    return this.query({
+        query: [
+            { field: 'category', operator: '==', value: 'electronics' },  // AND condition
+            {
+                or: [
+                    { field: 'price', operator: '>', value: 1000 },
+                    { field: 'rating', operator: '>', value: 4.5 }
+                ]
+            }
+        ]
+    })
+}
+```
+
+##### Multiple OR Groups
+
+```
+findByMultipleConditions(): Promise<Array<User>> {
+    return this.query({
+        query: [
+            { field: 'active', operator: '==', value: true },  // AND
+            {
+                or: [
+                    { field: 'price', operator: '>', value: 1000 },
+                    { field: 'popular', operator: '==', value: true }
+                ]
+            },
+            {
+                or: [
+                    { field: 'category', operator: 'in', value: ['electronics', 'books'] },
+                    { field: 'featured', operator: '==', value: true }
+                ]
+            }
+        ]
+    })
+}
+```
+
+##### OR with Different Operators
+
+```
+findByComplexConditions(): Promise<Array<User>> {
+    return this.query({
+        query: [
+            {
+                or: [
+                    { field: 'status', operator: '==', value: 'active' },
+                    { field: 'price', operator: '>', value: 100 },
+                    { field: 'tags', operator: 'array-contains', value: 'premium' },
+                    { field: 'category', operator: 'in', value: ['electronics', 'books'] }
+                ]
+            }
+        ]
+    })
+}
+```
+
+##### Limitations
+
+- Firestore limits OR queries to a maximum of 30 disjunctions
+- OR queries cannot be combined with `not-in` operators in the same query
+- Only one `not-in` or `!=` operator is allowed per query
+- Complex OR queries may require composite indexes in Firestore
 
 #### Paginated Query
 
