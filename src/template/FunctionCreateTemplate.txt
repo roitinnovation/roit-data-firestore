@@ -20,6 +20,7 @@ create(items) {
                 const collection = db.collection('<COLLECTION_REPLACE>');
                 const validatorDataHandle = global.instances.validatorDataHandle;
                 const batch = db.batch();
+                
                 for (const item of items) {
                     yield validatorDataHandle.validateModel(modelName, item, validatorOptions);
                     if (!item.id) {
@@ -32,35 +33,36 @@ create(items) {
                     item.updateAt = newDate();
                     item.updateTimestampAt = new Date(item.updateAt).getTime();
                     item.lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED';
-                    const docRef = collection.doc(item.id);
-                    batch.set(docRef, JSON.parse(JSON.stringify(item)));
+                    
+                    // Preparar dados para persistir (consolidado)
+                    const itemData = JSON.parse(JSON.stringify(item));
                     if (ttlExpirationIn && ttlUnit) {
-                        const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
-                        batch.set(docRef, {
-                            ttlExpirationAt: ttl,
-                        }, { merge: true });
+                        itemData.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit);
                     }
+                    batch.set(collection.doc(item.id), itemData);
                 }
+                
                 if (!environmentUtil.areWeTesting()) {
                     yield batch.commit();
                     yield this.revokeCache();
-                }
-                else {
+                } else {
                     console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
                 }
+                
                 span.setAttributes({
                     'firestore.operation.name': 'create',
                     'firestore.operation.size': items.length,
                     'firestore.collection.name': '<COLLECTION_REPLACE>',
-                })                 
+                });
                 return items;
-
             } catch (error) {
                 span.setStatus({
                     code: 2,
                     message: error.message
-                })
+                });
+                span.recordException(error);
+                throw error;
             }
-        })
+        });
     });
 }

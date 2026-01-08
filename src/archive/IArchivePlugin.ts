@@ -1,0 +1,80 @@
+/**
+ * Interface para plugins de arquivamento
+ * 
+ * Esta interface define o contrato que plugins de archive devem implementar.
+ * O plugin `firestore-archive` implementa esta interface.
+ * 
+ * @example
+ * ```typescript
+ * import { registerArchivePlugin } from '@roit/roit-data-firestore';
+ * import { createArchivePlugin } from 'firestore-archive';
+ * 
+ * // Registrar o plugin no início da aplicação
+ * registerArchivePlugin(createArchivePlugin());
+ * ```
+ */
+export interface IArchivePlugin {
+  /**
+   * Verifica se o arquivamento está habilitado
+   */
+  isEnabled(): boolean;
+
+  /**
+   * Verifica se um documento está arquivado (tem fbArchivedAt)
+   */
+  isDocumentArchived(doc: Record<string, unknown>): boolean;
+
+  /**
+   * Recupera documento arquivado do Storage
+   * 
+   * @param collection - Nome da collection
+   * @param docId - ID do documento
+   * @param projectId - ID do projeto (opcional)
+   * @returns Dados do documento ou null se não encontrado
+   */
+  getArchivedDocument(
+    collection: string,
+    docId: string,
+    projectId?: string
+  ): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Atualiza documento arquivado (merge dados do Storage com novos dados)
+   * 
+   * @param collection - Nome da collection
+   * @param docId - ID do documento
+   * @param newData - Novos dados para mesclar
+   * @param options - Opções (unarchive: true para remover do Storage)
+   * @param projectId - ID do projeto (opcional)
+   * @returns Resultado com dados mesclados
+   */
+  updateArchivedDocument(
+    collection: string,
+    docId: string,
+    newData: Record<string, unknown>,
+    options?: { unarchive?: boolean },
+    projectId?: string
+  ): Promise<{
+    result: { success: boolean; message?: string; error?: Error };
+    mergedData?: Record<string, unknown>;
+  }>;
+
+  /**
+   * Invalida cache de documentos arquivados
+   * 
+   * @param collection - Nome da collection (opcional)
+   * @param docId - ID do documento (opcional)
+   */
+  invalidateCache(collection?: string, docId?: string): Promise<void>;
+}
+
+/**
+ * Campos de metadados de arquivamento no Firestore
+ */
+export const ARCHIVE_METADATA_FIELDS = {
+  ARCHIVED_AT: 'fbArchivedAt',
+  ARCHIVE_HASH: 'fbArchiveHash',
+  ARCHIVE_PATH: 'fbArchivePath',
+  RESTORED_AT: 'fbRestoredAt',
+} as const;
+

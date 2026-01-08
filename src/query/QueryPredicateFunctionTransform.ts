@@ -56,6 +56,7 @@ export class QueryPredicateFunctionTransform {
             environmentUtil: new EnvironmentUtil,
             firestoreReadAuditResolver: FirestoreReadAuditResolver.getInstance(),
             fieldValueIncrement: FieldValue.increment,
+            FieldValue: FieldValue,
             getTtlTimestamp: TtlBuilderUtil.getTtlTimestamp,
             convertToMQuery: ManualQueryHelper.convertToMQuery,
             aggregateAverage: AggregateField.average,

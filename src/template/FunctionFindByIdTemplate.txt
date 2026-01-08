@@ -18,17 +18,17 @@ findById(id) {
                     return undefined;
                 }
                 const response = yield collection.doc(id).get();
-                const item = response.data();
+                let item = response.data();
+                
                 // VERIFICAÇÃO DE ARQUIVAMENTO
-                if (item && archiveService.isDocumentArchived(item)) {
+                if (archiveService.isEnabled() && item && archiveService.isDocumentArchived(item)) {
                     const archivedData = yield archiveService.getArchivedDocument('<COLLECTION_REPLACE>', item);
                     if (archivedData) {
-                        const completeData = { ...item, ...archivedData };
-                        yield cacheResolver.cacheResult(repositoryClassName, methodSignature, completeData, id);
+                        item = { ...item, ...archivedData };
                     }
-                } else {
-                    yield cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id);
                 }
+                
+                yield cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id);
                 const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
                 yield firestoreReadAuditResolver.persistFirestoreRead({
                     collection: '<COLLECTION_REPLACE>',
@@ -41,16 +41,16 @@ findById(id) {
                     'firestore.operation.name': 'findById',
                     'firestore.collection.name': '<COLLECTION_REPLACE>',
                     'firestore.collection.id': id
-                }) 
+                });
                 return item;
             } catch (error) {
                 span.setStatus({
                     code: 2,
                     message: error.message
-                })
-                span.recordException(error)
-                throw error
+                });
+                span.recordException(error);
+                throw error;
             }
-        })
+        });
     });
 }
