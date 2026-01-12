@@ -1,6 +1,6 @@
 {
   "name": "@roit/roit-data-firestore",
-  "version": "1.2.39",
+  "version": "1.2.43",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
   "scripts": {
@@ -12,30 +12,30 @@
   "devDependencies": {
     "@google-cloud/bigquery": "6.0.3",
     "@google-cloud/pubsub": "3.3.0",
-    "@types/jest": "^27.0.2",
-    "@types/node": "^6.0.46",
+    "@types/jest": "30.0.0",
+    "@types/node": "20.14.8",
     "@types/promise-timeout": "^1.3.3",
     "@types/shelljs": "^0.8.9",
     "@types/uuid": "^8.3.1",
     "copyfiles": "^2.4.1",
-    "jest": "^27.3.1",
+    "jest": "30.2.0",
     "redis": "4.0.6",
-    "ts-jest": "^27.0.7",
-    "ts-node": "^8.3.0",
-    "typescript": "^4.8.0"
+    "ts-jest": "29.4.5",
+    "ts-node": "10.9.2",
+    "typescript": "5.2.2"
   },
   "dependencies": {
     "@google-cloud/firestore": "7.3.0",
     "@google-cloud/storage": "^7.7.0",
     "@roit/roit-date": "1.10.5",
-    "class-validator": "0.14.0",
-    "class-validator-jsonschema": "5.0.0",
+    "class-validator": "0.14.1",
+    "class-validator-jsonschema": "5.1.0",
     "date-fns": "2.30.0",
     "firebase": "^9.2.0",
     "node-cache": "5.1.2",
     "promise-timeout": "^1.3.0",
     "reflect-metadata": "0.1.13",
-    "shelljs": "^0.8.4",
+    "shelljs": "0.10.0",
     "uuid": "^8.3.2"
   },
   "repository": {

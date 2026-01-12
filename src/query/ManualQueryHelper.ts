@@ -1,9 +1,9 @@
-import { Firestore } from "@google-cloud/firestore";
+import { Firestore, Filter } from "@google-cloud/firestore";
 import { CacheResolver } from "../cache/CacheResolver";
 import { FirestoreInstance } from '../config/FirestoreInstance';
 import { FirestoreReadAuditResolver } from "../firestore-read-audit/FirestoreReadAuditResolver";
 import { QueryResult } from "../model";
-import { Config, MQuery, MQuerySimple, Options } from '../model/MQuery';
+import { Config, MQuery, MQueryOr, MQuerySimple, Options } from '../model/MQuery';
 import { RepositoryOptions } from '../model/RepositoryOptions';
 import { QueryCreatorConfig } from "./QueryCreatorConfig";
 import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
@@ -97,30 +97,53 @@ export class ManualQueryHelper {
         
                     const collection = firestoreInstance.collection(repositoryOptions.collection)
         
-                    let queryList: Array<MQuery>
+                    let queryList: Array<MQuery | MQuerySimple | MQueryOr>
         
                     let queryExecute: any = collection
         
                     if (config?.query && config?.query?.length > 0) {
-        
+
                         queryList = config.query.map(query => {
-                            if (Object.keys(query).length === 1) {
-                                return this.convertToMQuery(query as MQuerySimple)
-                            }
                             return query;
-                        }) as Array<MQuery>
-        
-                        const queryInit = queryList[0]
-        
-                        queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value)
-                        pushTraceQuery(queryInit)
-        
-                        queryList.shift()
-        
-                        queryList.forEach(que => {
-                            queryExecute = queryExecute!.where(que.field, que.operator, que.value)
-                            pushTraceQuery(que)
-                        })
+                        });
+
+                        for (const queryItem of queryList) {
+
+                            if (queryItem && typeof queryItem === 'object' && 'or' in queryItem && Array.isArray(queryItem.or)) {
+                                const orFilters = queryItem.or.map((orCondition: any) => {
+                                    const mQuery = Object.keys(orCondition).length === 1
+                                        ? this.convertToMQuery(orCondition as MQuerySimple)
+                                        : orCondition as MQuery;
+
+                                    pushTraceQuery(mQuery);
+
+                                    return Filter.where(mQuery.field, mQuery.operator, mQuery.value);
+                                });
+
+                                if (orFilters.length > 0) {
+                                    const orFilter = Filter.or(...orFilters);
+                                    
+                                    if (queryExecute === collection) {
+                                        queryExecute = collection.where(orFilter);
+                                    } else {
+                                        queryExecute = queryExecute.where(orFilter);
+                                    }
+                                }
+                                
+                            } else {
+                                const mQuery = Object.keys(queryItem).length === 1
+                                    ? this.convertToMQuery(queryItem as unknown as MQuerySimple)
+                                    : queryItem as MQuery;
+                                
+                                if (queryExecute === collection) {
+                                    queryExecute = collection.where(mQuery.field, mQuery.operator as any, mQuery.value);
+                                } else {
+                                    queryExecute = queryExecute.where(mQuery.field, mQuery.operator as any, mQuery.value);
+                                }
+                                
+                                pushTraceQuery(mQuery);
+                            }
+                        }
                     }
         
                     if (config && config?.select) {

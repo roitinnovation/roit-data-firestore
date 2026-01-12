@@ -3,8 +3,8 @@ import { CacheProvider, InMemoryCacheProvider } from "./providers"
 import { RedisCacheProvider } from "./providers/RedisCacheProvider"
 import { CacheProviders } from "../model/CacheProviders"
 import { currentEnv } from "../util/CurrentEnv"
-import { isDebug } from "../util/IsDebug"
 import { QueryPredicateFunctionTransform } from "../query/QueryPredicateFunctionTransform"
+import { isDebug } from "../util/IsDebug"
 
 export class CacheResolver {
 

@@ -2,7 +2,7 @@
     "compilerOptions": {
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "target": "es6",
+        "target": "es2021",
         "declaration": true,
         "module": "commonjs",
         "outDir": "dist",
@@ -16,7 +16,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "strictPropertyInitialization": false,
-        "lib": ["dom", "es2018"],
+        "lib": ["dom", "es2021"],
     },
     "include": [
         "src/**/*.ts",
