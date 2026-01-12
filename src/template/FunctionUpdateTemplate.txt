@@ -73,9 +73,10 @@ update(items) {
 
                     if (isArchived) {
                         const FieldValue = global.instances.FieldValue;
-                        itemData.fbArchivedAt = FieldValue.delete();
-                        itemData.fbArchivePath = FieldValue.delete();
-                        itemData.fbArchiveHash = FieldValue.delete();
+                        const ARCHIVE_FIELDS = global.instances.ARCHIVE_FIELDS;
+                        itemData[ARCHIVE_FIELDS.ARCHIVED_AT] = FieldValue.delete();
+                        itemData[ARCHIVE_FIELDS.ARCHIVE_PATH] = FieldValue.delete();
+                        itemData[ARCHIVE_FIELDS.ARCHIVE_HASH] = FieldValue.delete();
                     }
 
                     batch.set(docRef, itemData, { merge: true });

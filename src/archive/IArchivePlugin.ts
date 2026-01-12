@@ -60,6 +60,20 @@ export interface IArchivePlugin {
   }>;
 
   /**
+   * Deleta documento arquivado do Storage
+   * 
+   * @param collection - Nome da collection
+   * @param docId - ID do documento
+   * @param projectId - ID do projeto (opcional)
+   * @returns Resultado da operação
+   */
+  deleteArchivedDocument(
+    collection: string,
+    docId: string,
+    projectId?: string
+  ): Promise<{ success: boolean; message?: string; error?: Error }>;
+
+  /**
    * Invalida cache de documentos arquivados
    * 
    * @param collection - Nome da collection (opcional)

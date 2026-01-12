@@ -5,8 +5,6 @@ import { CacheProviders } from "../model/CacheProviders"
 import { currentEnv } from "../util/CurrentEnv"
 import { isDebug } from "../util/IsDebug"
 import { QueryPredicateFunctionTransform } from "../query/QueryPredicateFunctionTransform"
-import { RedisCacheArchiveProvider } from "./providers/RedisCacheArchiveProvider"
-import { ArchiveConfig } from "../config/ArchiveConfig"
 
 export class CacheResolver {
 
@@ -21,7 +19,6 @@ export class CacheResolver {
     private constructor() {
         this.providersImplMap.set(CacheProviders.LOCAL, InMemoryCacheProvider)
         this.providersImplMap.set(CacheProviders.REDIS, RedisCacheProvider)
-        this.providersImplMap.set(CacheProviders.REDIS_ARCHIVE, RedisCacheArchiveProvider)
     }
 
     static getInstance(): CacheResolver {
@@ -124,7 +121,7 @@ export class CacheResolver {
             }
     
             if (shouldDelete) {
-                if (Boolean(ArchiveConfig.getConfig().debug)) {
+                if (isDebug) {
                     console.debug('[DEBUG] Archive Cache >', `Removing key: ${key}`)
                 }
                 await this.cacheProvider.delete(key)
@@ -151,7 +148,7 @@ export class CacheResolver {
         if (archiveKeys && Array.isArray(archiveKeys)) {
             for (const key of archiveKeys) {
                 if (key.includes(`getArchivedDocument:archived_${collectionName}`)) { 
-                    if (Boolean(ArchiveConfig.getConfig().debug)) {
+                    if (isDebug) {
                         console.debug('[DEBUG] Archive Cache >', `Removing archive key: ${key}`)
                     }
                     await this.cacheProvider.delete(key)

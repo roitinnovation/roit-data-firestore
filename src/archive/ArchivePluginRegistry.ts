@@ -36,6 +36,14 @@ class NoOpArchivePlugin implements IArchivePlugin {
     };
   }
 
+  async deleteArchivedDocument(
+    _collection: string,
+    _docId: string,
+    _projectId?: string
+  ): Promise<{ success: boolean; message?: string }> {
+    return { success: false, message: 'Archive plugin not registered' };
+  }
+
   async invalidateCache(_collection?: string, _docId?: string): Promise<void> {
     // No-op
   }
