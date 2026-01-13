@@ -57,7 +57,8 @@ update(items) {
                             );
                             
                             if (updateResult.result.success && updateResult.mergedData) {
-                                Object.assign(item, updateResult.mergedData);
+                                const originalItem = Object.assign({}, item);
+                                Object.assign(item, updateResult.mergedData, originalItem);
                                 isArchived = true;
                             }
                         }
