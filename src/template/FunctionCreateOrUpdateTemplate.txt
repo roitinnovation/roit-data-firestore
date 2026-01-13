@@ -38,13 +38,14 @@ createOrUpdate(items) {
                     yield validatorDataHandle.validateModel(modelName, item, validatorOptions);
                     
                     const docRef = docRefs[i];
-                    let isArchived = false;
+                    let wasArchived = false;
                     
                     // VERIFICAÇÃO DE DOCUMENTO ARQUIVADO
                     if (archiveService.isEnabled() && existingDocs[i]?.exists) {
                         const currentData = existingDocs[i].data();
                         
                         if (currentData && archiveService.isDocumentArchived(currentData)) {
+                            wasArchived = true;
                             const archivePath = currentData.fbArchivePath;
                             const updateResult = yield archiveService.updateArchivedDocument(
                                 '<COLLECTION_REPLACE>',
@@ -61,7 +62,6 @@ createOrUpdate(items) {
                                 }
                                 const originalItem = Object.assign({}, item);
                                 Object.assign(item, updateResult.mergedData, originalItem);
-                                isArchived = true;
                             }
                         }
                     }
@@ -80,7 +80,7 @@ createOrUpdate(items) {
                         itemData.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit);
                     }
 
-                    if (isArchived) {
+                    if (wasArchived) {
                         const FieldValue = global.instances.FieldValue;
                         const ARCHIVE_FIELDS = global.instances.ARCHIVE_FIELDS;
                         itemData[ARCHIVE_FIELDS.ARCHIVED_AT] = FieldValue.delete();

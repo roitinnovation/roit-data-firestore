@@ -11,7 +11,7 @@ updatePartial(id, item) {
                 const archiveService = yield global.instances.archiveService;
                 const document = db.collection('<COLLECTION_REPLACE>').doc(id);
                 
-                let isArchived = false;
+                let shouldUnarchive = false;
                 
                 // VERIFICAÇÃO DE DOCUMENTO ARQUIVADO
                 if (archiveService.isEnabled()) {
@@ -30,11 +30,12 @@ updatePartial(id, item) {
                                 { unarchive: true }
                             );
                             
-                            if (updateResult.result.success && updateResult.mergedData) {
-                                const originalItem = Object.assign({}, item);
-                                Object.assign(item, updateResult.mergedData, originalItem);
-                                isArchived = true;
+                            if (!(updateResult && updateResult.result && updateResult.result.success && updateResult.mergedData)) {
+                                throw new Error('Failed to update archived document; aborting partial update to prevent inconsistent state and stale archive overwriting user changes.');
                             }
+                            const originalItem = Object.assign({}, item);
+                            Object.assign(item, updateResult.mergedData, originalItem);
+                            shouldUnarchive = true;
                         }
                     }
                 }
@@ -47,7 +48,7 @@ updatePartial(id, item) {
                         updateTimestampAt
                     };
 
-                    if (isArchived) {
+                    if (shouldUnarchive) {
                         const FieldValue = global.instances.FieldValue;
                         const ARCHIVE_FIELDS = global.instances.ARCHIVE_FIELDS;
                         itemData[ARCHIVE_FIELDS.ARCHIVED_AT] = FieldValue.delete();
