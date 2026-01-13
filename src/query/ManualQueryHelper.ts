@@ -215,7 +215,6 @@ export class ManualQueryHelper {
                 }
                 
             } catch (error) {
-                console.error(error)
                 span.setStatus({
                     code: 2,
                     message: error.message

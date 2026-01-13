@@ -18,31 +18,47 @@ findAll(paging) {
                     console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
                     return [];
                 }
-                let { documentRef } = yield queryCreatorConfig.buildPaging(collection, paging, { showCount: false });
+                const { documentRef } = yield queryCreatorConfig.buildPaging(collection, paging, { showCount: false });
                 const snapshot = yield documentRef.get();
-                let items = new Array;
+                let items = [];
                 snapshot.forEach(doc => {
-                    const data = doc.data();
-                    items.push(Object.assign({}, data));
+                    items.push({ ...doc.data(), id: doc.id });
                 });
+                
                 // VERIFICAÇÃO DE ARQUIVAMENTO PARA MÚLTIPLOS DOCUMENTOS
-                const archivedItems = items.filter(item => archiveService.isDocumentArchived(item));
-                if (archivedItems.length > 0) {
-                    const recoveryPromises = archivedItems.map((item) => {
-                        return archiveService.getArchivedDocument('<COLLECTION_REPLACE>', item)
-                            .then(archivedData => archivedData ? { ...item, ...archivedData } : item);
-                    });
-                    
-                    const recoveredItems = yield Promise.all(recoveryPromises);
-                    
-                    // Substituir itens arquivados pelos recuperados
-                    items = items.map(item => {
+                if (archiveService.isEnabled()) {
+                    const archivedIndexes = [];
+                    items.forEach((item, index) => {
                         if (archiveService.isDocumentArchived(item)) {
-                            return recoveredItems.find(recovered => recovered.id === item.id) || item;
+                            archivedIndexes.push(index);
                         }
-                        return item;
                     });
+                    
+                    if (archivedIndexes.length > 0) {
+                        const recoveryPromises = archivedIndexes.map(index => 
+                            archiveService.getArchivedDocument('<COLLECTION_REPLACE>', items[index])
+                                .then(archivedData => ({ index, data: archivedData }))
+                                .catch(error => {
+                                    console.warn('Failed to recover archived document data', {
+                                        collection: '<COLLECTION_REPLACE>',
+                                        id: items[index] && items[index].id,
+                                        error: error && error.message ? error.message : String(error)
+                                    });
+                                    return { index, data: null };
+                                })
+                        );
+                        
+                        const recoveredResults = yield Promise.all(recoveryPromises);
+                        
+                        // Substituir itens arquivados pelos recuperados (O(n) em vez de O(n²))
+                        for (const { index, data } of recoveredResults) {
+                            if (data) {
+                                items[index] = { ...items[index], ...data };
+                            }
+                        }
+                    }
                 }
+                
                 yield cacheResolver.cacheResult(repositoryClassName, methodSignature, items, 'Any');
                 const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
                 yield firestoreReadAuditResolver.persistFirestoreRead({
@@ -55,16 +71,16 @@ findAll(paging) {
                     'firestore.operation.name': 'findAll',
                     'firestore.collection.name': '<COLLECTION_REPLACE>',
                     'firestore.operation.size': items.length
-                })                 
+                });
                 return items;
             } catch (error) {
                 span.setStatus({
                     code: 2,
                     message: error.message
-                })
-                span.recordException(error)
-                throw error
+                });
+                span.recordException(error);
+                throw error;
             }
-        })
+        });
     });
 }

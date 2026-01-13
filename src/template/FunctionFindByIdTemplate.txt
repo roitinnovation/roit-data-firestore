@@ -18,17 +18,27 @@ findById(id) {
                     return undefined;
                 }
                 const response = yield collection.doc(id).get();
-                const item = response.data();
+                
+                const data = response.data();
+                let item = data ? { ...data, id: response.id } : undefined;
+                
                 // VERIFICAÇÃO DE ARQUIVAMENTO
-                if (item && archiveService.isDocumentArchived(item)) {
-                    const archivedData = yield archiveService.getArchivedDocument('<COLLECTION_REPLACE>', item);
-                    if (archivedData) {
-                        const completeData = { ...item, ...archivedData };
-                        yield cacheResolver.cacheResult(repositoryClassName, methodSignature, completeData, id);
+                if (archiveService.isEnabled() && item && archiveService.isDocumentArchived(item)) {
+                    try {
+                        const archivedData = yield archiveService.getArchivedDocument('<COLLECTION_REPLACE>', item);
+                        if (archivedData) {
+                            item = { ...item, ...archivedData };
+                        }
+                    } catch (error) {
+                        console.warn('Failed to recover archived document data', {
+                            collection: '<COLLECTION_REPLACE>',
+                            id,
+                            error: error && error.message ? error.message : String(error)
+                        });
                     }
-                } else {
-                    yield cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id);
                 }
+                
+                yield cacheResolver.cacheResult(repositoryClassName, methodSignature, item, id);
                 const firestoreReadAuditResolver = global.instances.firestoreReadAuditResolver;
                 yield firestoreReadAuditResolver.persistFirestoreRead({
                     collection: '<COLLECTION_REPLACE>',
@@ -41,16 +51,16 @@ findById(id) {
                     'firestore.operation.name': 'findById',
                     'firestore.collection.name': '<COLLECTION_REPLACE>',
                     'firestore.collection.id': id
-                }) 
+                });
                 return item;
             } catch (error) {
                 span.setStatus({
                     code: 2,
                     message: error.message
-                })
-                span.recordException(error)
-                throw error
+                });
+                span.recordException(error);
+                throw error;
             }
-        })
+        });
     });
 }

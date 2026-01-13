@@ -19,12 +19,55 @@ createOrUpdate(items) {
                 const getTtlTimestamp = global.instances.getTtlTimestamp;
                 const collection = db.collection('<COLLECTION_REPLACE>');
                 const validatorDataHandle = global.instances.validatorDataHandle;
+                const archiveService = yield global.instances.archiveService;
                 const batch = db.batch();
-                for (const item of items) {
+                
+                // Preparar IDs e buscar documentos existentes em lote (otimização)
+                const itemsWithIds = items.map(item => {
+                    if (!item.id) item.id = uuid();
+                    return item;
+                });
+                
+                const docRefs = itemsWithIds.map(item => collection.doc(item.id));
+                const existingDocs = (archiveService.isEnabled() && docRefs.length > 0)
+                    ? yield db.getAll(...docRefs)
+                    : [];
+                
+                for (let i = 0; i < itemsWithIds.length; i++) {
+                    const item = itemsWithIds[i];
                     yield validatorDataHandle.validateModel(modelName, item, validatorOptions);
-                    if (!item.id) {
-                        item.id = uuid();
+                    
+                    const docRef = docRefs[i];
+                    let shouldUnarchive = false;
+                    
+                    // VERIFICAÇÃO DE DOCUMENTO ARQUIVADO
+                    if (archiveService.isEnabled() && existingDocs[i]?.exists) {
+                        const currentData = existingDocs[i].data();
+                        
+                        if (currentData && archiveService.isDocumentArchived(currentData)) {
+                            const archivePath = currentData.fbArchivePath;
+                            const updateResult = yield archiveService.updateArchivedDocument(
+                                '<COLLECTION_REPLACE>',
+                                item.id,
+                                item,
+                                archivePath,
+                                { unarchive: true }
+                            );
+                            
+                            if (updateResult.result.success && updateResult.mergedData) {
+                                if (updateResult.mergedData.createAt) {
+                                    item.createAt = updateResult.mergedData.createAt;
+                                    item.createTimestampAt = updateResult.mergedData.createTimestampAt;
+                                }
+                                const originalItem = Object.assign({}, item);
+                                Object.assign(item, updateResult.mergedData, originalItem);
+                                shouldUnarchive = true;
+                            } else {
+                                throw new Error('Failed to update archived document; aborting createOrUpdate to prevent inconsistent state and stale archive overwriting user changes.');
+                            }
+                        }
                     }
+                    
                     if (!item.createAt) {
                         item.createAt = newDate();
                         item.createTimestampAt = new Date(item.createAt).getTime();
@@ -32,40 +75,46 @@ createOrUpdate(items) {
                     item.updateAt = newDate();
                     item.updateTimestampAt = new Date(item.updateAt).getTime();
                     item.lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED';
-                    const docRef = collection.doc(item.id);
-                    if (ttlExpirationIn && item?.ttlExpirationAt) {
-                        delete item.ttlExpirationAt;
-                    }
-                    batch.set(docRef, JSON.parse(JSON.stringify(item)), { merge: true });
+                    
+                    // Preparar dados para persistir (consolidado)
+                    const itemData = JSON.parse(JSON.stringify(item));
                     if (ttlExpirationIn && ttlUnit) {
-                        const ttl = getTtlTimestamp(ttlExpirationIn, ttlUnit);
-                        batch.set(docRef, {
-                            ttlExpirationAt: ttl,
-                        }, { merge: true });
+                        itemData.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit);
                     }
+
+                    if (shouldUnarchive) {
+                        const FieldValue = global.instances.FieldValue;
+                        const ARCHIVE_FIELDS = global.instances.ARCHIVE_FIELDS;
+                        itemData[ARCHIVE_FIELDS.ARCHIVED_AT] = FieldValue.delete();
+                        itemData[ARCHIVE_FIELDS.ARCHIVE_PATH] = FieldValue.delete();
+                        itemData[ARCHIVE_FIELDS.ARCHIVE_HASH] = FieldValue.delete();
+                    }
+
+                    batch.set(docRef, itemData, { merge: true });
                 }
+                
                 if (!environmentUtil.areWeTesting()) {
                     yield batch.commit();
                     yield this.revokeCache();
-                }
-                else {
+                } else {
                     console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
                 }
+                
                 span.setAttributes({
                     'firestore.operation.name': 'createOrUpdate',
                     'firestore.operation.size': items.length,
                     'firestore.collection.name': '<COLLECTION_REPLACE>',
-                })                 
+                });
                 return items;
 
             } catch (error) {
                 span.setStatus({
                     code: 2,
                     message: error.message
-                })
-                span.recordException(error)
-                throw error
+                });
+                span.recordException(error);
+                throw error;
             }
-        })
+        });
     });
 }

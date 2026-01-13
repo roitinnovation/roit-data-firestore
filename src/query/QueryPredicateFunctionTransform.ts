@@ -18,6 +18,7 @@ import fs  from 'fs'
 import path  from 'path'
 import { startTracer } from '../tracer/Tracer';
 import { ArchiveService } from '../archive/ArchiveService';
+import { ARCHIVE_METADATA_FIELDS } from '../archive';
 
 const functionQueryTemplate = fs.readFileSync(path.resolve(__dirname, '../template/FunctionQueryTemplate.txt'), 'utf8')
 
@@ -56,13 +57,15 @@ export class QueryPredicateFunctionTransform {
             environmentUtil: new EnvironmentUtil,
             firestoreReadAuditResolver: FirestoreReadAuditResolver.getInstance(),
             fieldValueIncrement: FieldValue.increment,
+            FieldValue: FieldValue,
             getTtlTimestamp: TtlBuilderUtil.getTtlTimestamp,
             convertToMQuery: ManualQueryHelper.convertToMQuery,
             aggregateAverage: AggregateField.average,
             aggregateSum: AggregateField.sum,
             aggregateCount: AggregateField.count,
             startTracer: startTracer,
-            archiveService: ArchiveService.getInstance()
+            archiveService: ArchiveService.getInstance(),
+            ARCHIVE_FIELDS: ARCHIVE_METADATA_FIELDS
         }
 
         if (!options?.collection) {
