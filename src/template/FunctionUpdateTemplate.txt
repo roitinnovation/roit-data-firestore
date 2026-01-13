@@ -47,10 +47,12 @@ update(items) {
                         const currentData = existingDocs[i].data();
                         
                         if (currentData && archiveService.isDocumentArchived(currentData)) {
+                            const archivePath = currentData.fbArchivePath;
                             const updateResult = yield archiveService.updateArchivedDocument(
                                 '<COLLECTION_REPLACE>',
                                 item.id,
                                 item,
+                                archivePath,
                                 { unarchive: true }
                             );
                             

@@ -18,15 +18,19 @@ delete(ids) {
                 const collection = db.collection('<COLLECTION_REPLACE>');
                 
                 // Verificar quais documentos estão arquivados antes de deletar
-                const archivedDocIds = [];
+                const archivedDocs = [];
                 if (archiveService.isEnabled()) {
                     for (const id of ids) {
                         const docRef = collection.doc(id);
                         const doc = yield docRef.get();
                         if (doc.exists) {
                             const data = doc.data();
-                            if (data && archiveService.isDocumentArchived(data)) {
-                                archivedDocIds.push(id);
+                            if (
+                                data 
+                                && archiveService.isDocumentArchived(data)
+                                && data.fbArchivePath
+                            ) {
+                                archivedDocs.push({ id, archivePath: data.fbArchivePath });
                             }
                         }
                     }
@@ -40,9 +44,9 @@ delete(ids) {
                     yield batch.commit();
                     
                     // Deletar arquivos do Storage para documentos arquivados
-                    if (archiveService.isEnabled() && archivedDocIds.length > 0) {
-                        const deletePromises = archivedDocIds.map(docId => 
-                            archiveService.deleteArchivedDocument('<COLLECTION_REPLACE>', docId)
+                    if (archiveService.isEnabled() && archivedDocs.length > 0) {
+                        const deletePromises = archivedDocs.map(({ id: docId, archivePath }) => 
+                            archiveService.deleteArchivedDocument('<COLLECTION_REPLACE>', docId, archivePath)
                                 .catch(err => {
                                     // Log erro mas não falha a operação principal
                                     console.warn(`Failed to delete archived file for ${docId}:`, err);
@@ -60,7 +64,7 @@ delete(ids) {
                     'firestore.operation.name': 'delete',
                     'firestore.collection.name': '<COLLECTION_REPLACE>',
                     'firestore.collection.id': JSON.stringify(ids),
-                    'firestore.archive.deleted': archivedDocIds.length
+                    'firestore.archive.deleted': archivedDocs.length
                 });
                 return ids;
             } catch (error) {

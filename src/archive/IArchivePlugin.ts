@@ -27,9 +27,11 @@ export interface IArchivePlugin {
   /**
    * Recupera documento arquivado do Storage.
    *
-   * IMPORTANTE (100% v3):
-   * - `archivePath` é obrigatório (normalmente o `fbArchivePath` do stub).
-   * - `docId` sozinho não identifica unicamente o objeto no Storage.
+   * @param collection - Nome da collection
+   * @param docId - ID do documento
+   * @param archivePath - Path completo do objeto no Storage, normalmente o `fbArchivePath` do stub.
+   * @param projectId - ID do projeto (opcional)
+   * @returns Resultado da operação
    */
   getArchivedDocument(params: {
     collection: string;
@@ -46,6 +48,7 @@ export interface IArchivePlugin {
    * @param newData - Novos dados para mesclar
    * @param options - Opções (unarchive: true para remover do Storage)
    * @param projectId - ID do projeto (opcional)
+   * @param archivePath - Path completo do objeto no Storage, normalmente o `fbArchivePath` do stub. É obrigatório quando unarchive=true
    * @returns Resultado com dados mesclados
    */
   updateArchivedDocument(params: {
@@ -54,7 +57,7 @@ export interface IArchivePlugin {
     newData: Record<string, unknown>;
     options?: { unarchive?: boolean };
     projectId?: string;
-    archivePath?: string;
+    archivePath: string;
   }): Promise<{
     result: { success: boolean; message?: string; error?: Error };
     mergedData?: Record<string, unknown>;
@@ -71,11 +74,8 @@ export interface IArchivePlugin {
   deleteArchivedDocument(params: {
     collection: string;
     docId: string;
+    archivePath: string;
     projectId?: string;
-    /**
-     * Path completo do objeto no Storage (v3), normalmente o `fbArchivePath` do stub.
-     */
-    archivePath?: string;
   }): Promise<{ success: boolean; message?: string; error?: Error }>;
 
   /**

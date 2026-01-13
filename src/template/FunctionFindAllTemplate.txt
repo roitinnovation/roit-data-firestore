@@ -22,7 +22,7 @@ findAll(paging) {
                 const snapshot = yield documentRef.get();
                 let items = [];
                 snapshot.forEach(doc => {
-                    items.push({ ...doc.data() });
+                    items.push({ ...doc.data(), id: doc.id });
                 });
                 
                 // VERIFICAÇÃO DE ARQUIVAMENTO PARA MÚLTIPLOS DOCUMENTOS

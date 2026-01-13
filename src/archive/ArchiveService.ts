@@ -187,6 +187,7 @@ export class ArchiveService {
    * @param collectionName - Nome da collection
    * @param docId - ID do documento
    * @param newData - Novos dados a serem mesclados com o documento arquivado
+   * @param archivePath - Path completo do objeto no Storage, normalmente o `fbArchivePath` do stub.
    * @param options - Opções de atualização
    * @returns Resultado da operação e dados mesclados
    */
@@ -194,10 +195,17 @@ export class ArchiveService {
     collectionName: string,
     docId: string,
     newData: Record<string, any>,
+    archivePath: string,
     options?: UpdateArchivedDocumentOptions
   ): Promise<{ result: ArchiveOperationResult; mergedData?: Record<string, any> }> {
     if (!this.isEnabled()) {
       return { result: { success: false, message: 'Arquivamento desabilitado ou plugin não registrado' } };
+    }
+
+    if (!archivePath || typeof archivePath !== 'string' || archivePath.trim().length === 0) {
+      throw new Error(
+        `ArchiveService.updateArchivedDocument: fbArchivePath is required. collection=${collectionName} docId=${docId}`
+      );
     }
 
     // Delega para plugin (isEnabled já garante que existe)
@@ -207,6 +215,7 @@ export class ArchiveService {
       newData,
       options,
       projectId: this.projectId,
+      archivePath,
     });
   }
 
@@ -216,12 +225,13 @@ export class ArchiveService {
    * 
    * @param collectionName - Nome da collection
    * @param docId - ID do documento
+   * @param archivePath - Path completo do objeto no Storage, normalmente o `fbArchivePath` do stub.
    * @returns Resultado da operação
    */
   async deleteArchivedDocument(
     collectionName: string,
     docId: string,
-    archivePath?: string
+    archivePath: string
   ): Promise<ArchiveOperationResult> {
     if (!this.isEnabled()) {
       return { success: false, message: 'Arquivamento desabilitado ou plugin não registrado' };

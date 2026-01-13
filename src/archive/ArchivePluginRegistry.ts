@@ -28,7 +28,7 @@ class NoOpArchivePlugin implements IArchivePlugin {
     newData: Record<string, unknown>;
     options?: { unarchive?: boolean };
     projectId?: string;
-    archivePath?: string;
+    archivePath: string;
   }): Promise<{
     result: { success: boolean; message?: string };
     mergedData?: Record<string, unknown>;
@@ -41,8 +41,8 @@ class NoOpArchivePlugin implements IArchivePlugin {
   async deleteArchivedDocument(_params: {
     collection: string;
     docId: string;
+    archivePath: string;
     projectId?: string;
-    archivePath?: string;
   }): Promise<{ success: boolean; message?: string }> {
     return { success: false, message: 'Archive plugin not registered' };
   }

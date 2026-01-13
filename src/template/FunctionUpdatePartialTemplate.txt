@@ -21,10 +21,12 @@ updatePartial(id, item) {
                         const currentData = currentDoc.data();
                         
                         if (currentData && archiveService.isDocumentArchived(currentData)) {
+                            const archivePath = currentData.fbArchivePath;
                             const updateResult = yield archiveService.updateArchivedDocument(
                                 '<COLLECTION_REPLACE>',
                                 id,
                                 item,
+                                archivePath,
                                 { unarchive: true }
                             );
                             
