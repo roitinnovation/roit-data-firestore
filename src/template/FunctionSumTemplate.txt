@@ -1,37 +1,53 @@
 sum(config) {
     return __awaiter(this, void 0, void 0, function* () {
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
-        const environmentUtil = global.instances.environmentUtil;
-        const convertToMQuery = global.instances.convertToMQuery;
-        const aggregateSum = global.instances.aggregateSum;
-        if (environmentUtil.areWeTesting()) {
-            console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
-            return 0;
-        }
-        const collection = db.collection('<COLLECTION_REPLACE>');
-        let queryList;
-        let queryExecute;
-        if ((config === null || config === void 0 ? void 0 : config.query) && config.query.length > 0) {
-            queryList = config.query.map(query => {
-                if (Object.keys(query).length === 1) {
-                    return convertToMQuery(query);
+        return yield global.instances.startTracer('firestore.sum', async (span) => {
+            try {
+                const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+                const environmentUtil = global.instances.environmentUtil;
+                const convertToMQuery = global.instances.convertToMQuery;
+                const aggregateSum = global.instances.aggregateSum;
+                
+                if (environmentUtil.areWeTesting()) {
+                    console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+                    return 0;
                 }
-                return query;
-            });
-            const queryInit = queryList[0];
-            queryExecute = collection.where(queryInit.field, queryInit.operator, queryInit.value);
-            queryList.shift();
-            queryList.forEach(que => {
-                queryExecute = queryExecute.where(que.field, que.operator, que.value);
-            });
-        }
-        else {
-            queryExecute = collection;
-        }
-        const sumAggregateQuery = queryExecute.aggregate({
-            sum: aggregateSum(config.attributeSum),
+                
+                const collection = db.collection('<COLLECTION_REPLACE>');
+                let queryExecute = collection;
+                
+                if (config?.query && config.query.length > 0) {
+                    const queryList = config.query.map(query => {
+                        if (Object.keys(query).length === 1) {
+                            return convertToMQuery(query);
+                        }
+                        return query;
+                    });
+                    
+                    for (const query of queryList) {
+                        queryExecute = queryExecute.where(query.field, query.operator, query.value);
+                    }
+                }
+                
+                const sumAggregateQuery = queryExecute.aggregate({
+                    sum: aggregateSum(config.attributeSum),
+                });
+                const snapshot = yield sumAggregateQuery.get();
+                
+                span.setAttributes({
+                    'firestore.operation.name': 'sum',
+                    'firestore.collection.name': '<COLLECTION_REPLACE>',
+                    'firestore.aggregate.attribute': config.attributeSum
+                });
+                
+                return snapshot.data().sum;
+            } catch (error) {
+                span.setStatus({
+                    code: 2,
+                    message: error.message
+                });
+                span.recordException(error);
+                throw error;
+            }
         });
-        const snapshot = yield sumAggregateQuery.get();
-        return snapshot.data().sum;
     });
 }

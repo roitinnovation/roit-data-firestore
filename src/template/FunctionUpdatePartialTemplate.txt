@@ -1,25 +1,80 @@
 updatePartial(id, item) {
     return __awaiter(this, void 0, void 0, function* () {
-        const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
-        const { newDate } = global.instances.dateRef;
-        const lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED';
-        const updateAt = newDate();
-        const updateTimestampAt = new Date(updateAt).getTime();
-        const environmentUtil = global.instances.environmentUtil;
-        const document = db.collection('<COLLECTION_REPLACE>').doc(id);
-        try {
-            if (!environmentUtil.areWeTesting()) {
-                yield document.set(Object.assign({ lastServiceModify,
-                    updateAt,
-                    updateTimestampAt }, item), { merge: true });
-                yield this.revokeCache();
+        return yield global.instances.startTracer('firestore.updatePartial', async (span) => {
+            try {
+                const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
+                const { newDate } = global.instances.dateRef;
+                const lastServiceModify = process.env.SERVICE || 'PROJECT_UNDEFINED';
+                const updateAt = newDate();
+                const updateTimestampAt = new Date(updateAt).getTime();
+                const environmentUtil = global.instances.environmentUtil;
+                const archiveService = yield global.instances.archiveService;
+                const document = db.collection('<COLLECTION_REPLACE>').doc(id);
+                
+                let shouldUnarchive = false;
+                
+                // VERIFICAÇÃO DE DOCUMENTO ARQUIVADO
+                if (archiveService.isEnabled()) {
+                    const currentDoc = yield document.get();
+                    
+                    if (currentDoc.exists) {
+                        const currentData = currentDoc.data();
+                        
+                        if (currentData && archiveService.isDocumentArchived(currentData)) {
+                            const archivePath = currentData.fbArchivePath;
+                            const updateResult = yield archiveService.updateArchivedDocument(
+                                '<COLLECTION_REPLACE>',
+                                id,
+                                item,
+                                archivePath,
+                                { unarchive: true }
+                            );
+                            
+                            if (!(updateResult && updateResult.result && updateResult.result.success && updateResult.mergedData)) {
+                                throw new Error('Failed to update archived document; aborting partial update to prevent inconsistent state and stale archive overwriting user changes.');
+                            }
+                            const originalItem = Object.assign({}, item);
+                            Object.assign(item, updateResult.mergedData, originalItem);
+                            shouldUnarchive = true;
+                        }
+                    }
+                }
+                
+                if (!environmentUtil.areWeTesting()) {
+                    const itemData = {
+                        ...item,
+                        lastServiceModify,
+                        updateAt,
+                        updateTimestampAt
+                    };
+
+                    if (shouldUnarchive) {
+                        const FieldValue = global.instances.FieldValue;
+                        const ARCHIVE_FIELDS = global.instances.ARCHIVE_FIELDS;
+                        itemData[ARCHIVE_FIELDS.ARCHIVED_AT] = FieldValue.delete();
+                        itemData[ARCHIVE_FIELDS.ARCHIVE_PATH] = FieldValue.delete();
+                        itemData[ARCHIVE_FIELDS.ARCHIVE_HASH] = FieldValue.delete();
+                    }
+
+                    yield document.set(itemData, { merge: true });
+                    yield this.revokeCache();
+                } else {
+                    console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
+                }
+                
+                span.setAttributes({
+                    'firestore.operation.name': 'updatePartial',
+                    'firestore.collection.name': '<COLLECTION_REPLACE>',
+                    'firestore.document.id': id,
+                });
+            } catch (error) {
+                span.setStatus({
+                    code: 2,
+                    message: error.message
+                });
+                span.recordException(error);
+                throw error;
             }
-            else {
-                console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
-            }
-        }
-        catch (e) {
-            console.error(e === null || e === void 0 ? void 0 : e.details);
-        }
+        });
     });
 }

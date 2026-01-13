@@ -13,33 +13,65 @@ delete(ids) {
                 }
                 const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
                 const environmentUtil = global.instances.environmentUtil;
+                const archiveService = yield global.instances.archiveService;
                 const batch = db.batch();
                 const collection = db.collection('<COLLECTION_REPLACE>');
-                ids.forEach(id => {
-                    const docRef = collection.doc(id);
-                    batch.delete(docRef);
-                });
+                
+                // Verificar quais documentos estão arquivados antes de deletar
+                const archivedDocs = [];
+                if (archiveService.isEnabled()) {
+                    const docRefs = ids.map(id => collection.doc(id));
+                    const docs = docRefs.length > 0 ? yield db.getAll(...docRefs) : [];
+                    for (let i = 0; i < docs.length; i++) {
+                        const doc = docs[i];
+                        if (doc && doc.exists) {
+                            const data = doc.data();
+                            if (data && archiveService.isDocumentArchived(data) && data.fbArchivePath) {
+                                archivedDocs.push({ id: ids[i], archivePath: data.fbArchivePath });
+                            }
+                        }
+                    }
+                }
+                
+                for (const id of ids) {
+                    batch.delete(collection.doc(id));
+                }
+                
                 if (!environmentUtil.areWeTesting()) {
                     yield batch.commit();
+                    
+                    // Deletar arquivos do Storage para documentos arquivados
+                    if (archiveService.isEnabled() && archivedDocs.length > 0) {
+                        const deletePromises = archivedDocs.map(({ id: docId, archivePath }) => 
+                            archiveService.deleteArchivedDocument('<COLLECTION_REPLACE>', docId, archivePath)
+                                .catch(err => {
+                                    // Log erro mas não falha a operação principal
+                                    console.warn(`Failed to delete archived file for ${docId}:`, err);
+                                })
+                        );
+                        yield Promise.all(deletePromises);
+                    }
+                    
                     yield this.revokeCache();
-                }
-                else {
+                } else {
                     console.log('It was decreed that it is being executed try, no operation or effective transaction will be performed');
                 }
+                
                 span.setAttributes({
                     'firestore.operation.name': 'delete',
                     'firestore.collection.name': '<COLLECTION_REPLACE>',
-                    'firestore.collection.id': JSON.stringify(ids)
-                })
+                    'firestore.collection.id': JSON.stringify(ids),
+                    'firestore.archive.deleted': archivedDocs.length
+                });
                 return ids;
             } catch (error) {
                 span.setStatus({
                     code: 2,
                     message: error.message
-                })
-                span.recordException(error)
-                throw error
+                });
+                span.recordException(error);
+                throw error;
             }
-        })
+        });
     });
 }

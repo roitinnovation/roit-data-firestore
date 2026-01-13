@@ -19,4 +19,16 @@ export { CacheProviders } from "./model/CacheProviders"
 
 export { FirestoreInstance } from "./config/FirestoreInstance"
 
+/**
+ * archive plugin system
+ */
+export {
+  IArchivePlugin,
+  ARCHIVE_METADATA_FIELDS,
+  registerArchivePlugin,
+  getArchivePlugin,
+  hasArchivePlugin,
+  resetArchivePlugin,
+} from "./archive"
+
 export * from "./model"
