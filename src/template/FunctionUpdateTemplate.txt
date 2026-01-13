@@ -40,14 +40,13 @@ update(items) {
                     yield validatorDataHandle.validateModel(modelName, item, validatorOptions);
                     
                     const docRef = docRefs[i];
-                    let wasArchived = false;
+                    let shouldUnarchive = false;
                     
                     // VERIFICAÇÃO DE DOCUMENTO ARQUIVADO
                     if (archiveService.isEnabled() && existingDocs[i]?.exists) {
                         const currentData = existingDocs[i].data();
                         
                         if (currentData && archiveService.isDocumentArchived(currentData)) {
-                            wasArchived = true;
                             const archivePath = currentData.fbArchivePath;
                             const updateResult = yield archiveService.updateArchivedDocument(
                                 '<COLLECTION_REPLACE>',
@@ -60,6 +59,9 @@ update(items) {
                             if (updateResult.result.success && updateResult.mergedData) {
                                 const originalItem = Object.assign({}, item);
                                 Object.assign(item, updateResult.mergedData, originalItem);
+                                shouldUnarchive = true;
+                            } else {
+                                throw new Error('Failed to update archived document; aborting update to prevent inconsistent state and stale archive overwriting user changes.');
                             }
                         }
                     }
@@ -74,7 +76,7 @@ update(items) {
                         itemData.ttlExpirationAt = getTtlTimestamp(ttlExpirationIn, ttlUnit);
                     }
 
-                    if (wasArchived) {
+                    if (shouldUnarchive) {
                         const FieldValue = global.instances.FieldValue;
                         const ARCHIVE_FIELDS = global.instances.ARCHIVE_FIELDS;
                         itemData[ARCHIVE_FIELDS.ARCHIVED_AT] = FieldValue.delete();

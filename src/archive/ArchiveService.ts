@@ -167,7 +167,7 @@ export class ArchiveService {
 
     if (!archivePath || archivePath.trim().length === 0) {
       throw new Error(
-        `ArchiveService.getArchivedDocument: fbArchivePath é obrigatório no padrão v3. collection=${collectionName} docId=${docId}`
+        `ArchiveService.getArchivedDocument: fbArchivePath is required. collection=${collectionName} docId=${docId}`
       );
     }
 
@@ -235,6 +235,12 @@ export class ArchiveService {
   ): Promise<ArchiveOperationResult> {
     if (!this.isEnabled()) {
       return { success: false, message: 'Arquivamento desabilitado ou plugin não registrado' };
+    }
+
+    if (!archivePath || typeof archivePath !== 'string' || archivePath.trim().length === 0) {
+      throw new Error(
+        `ArchiveService.deleteArchivedDocument: fbArchivePath is required. collection=${collectionName} docId=${docId}`
+      );
     }
 
     // Delega para plugin (isEnabled já garante que existe)
