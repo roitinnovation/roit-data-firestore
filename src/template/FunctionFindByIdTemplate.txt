@@ -18,7 +18,9 @@ findById(id) {
                     return undefined;
                 }
                 const response = yield collection.doc(id).get();
-                let item = response.data();
+                
+                const data = response.data();
+                let item = data ? { ...data, id: response.id } : undefined;
                 
                 // VERIFICAÇÃO DE ARQUIVAMENTO
                 if (archiveService.isEnabled() && item && archiveService.isDocumentArchived(item)) {

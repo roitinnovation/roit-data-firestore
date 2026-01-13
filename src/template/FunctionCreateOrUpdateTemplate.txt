@@ -59,7 +59,8 @@ createOrUpdate(items) {
                                     item.createAt = updateResult.mergedData.createAt;
                                     item.createTimestampAt = updateResult.mergedData.createTimestampAt;
                                 }
-                                Object.assign(item, updateResult.mergedData, item);
+                                const originalItem = Object.assign({}, item);
+                                Object.assign(item, updateResult.mergedData, originalItem);
                                 isArchived = true;
                             }
                         }
