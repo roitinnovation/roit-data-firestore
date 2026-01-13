@@ -38,6 +38,14 @@ findAll(paging) {
                         const recoveryPromises = archivedIndexes.map(index => 
                             archiveService.getArchivedDocument('<COLLECTION_REPLACE>', items[index])
                                 .then(archivedData => ({ index, data: archivedData }))
+                                .catch(error => {
+                                    console.warn('Failed to recover archived document data', {
+                                        collection: '<COLLECTION_REPLACE>',
+                                        id: items[index] && items[index].id,
+                                        error: error && error.message ? error.message : String(error)
+                                    });
+                                    return { index, data: null };
+                                })
                         );
                         
                         const recoveredResults = yield Promise.all(recoveryPromises);

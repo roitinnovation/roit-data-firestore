@@ -24,9 +24,17 @@ findById(id) {
                 
                 // VERIFICAÇÃO DE ARQUIVAMENTO
                 if (archiveService.isEnabled() && item && archiveService.isDocumentArchived(item)) {
-                    const archivedData = yield archiveService.getArchivedDocument('<COLLECTION_REPLACE>', item);
-                    if (archivedData) {
-                        item = { ...item, ...archivedData };
+                    try {
+                        const archivedData = yield archiveService.getArchivedDocument('<COLLECTION_REPLACE>', item);
+                        if (archivedData) {
+                            item = { ...item, ...archivedData };
+                        }
+                    } catch (error) {
+                        console.warn('Failed to recover archived document data', {
+                            collection: '<COLLECTION_REPLACE>',
+                            id,
+                            error: error && error.message ? error.message : String(error)
+                        });
                     }
                 }
                 

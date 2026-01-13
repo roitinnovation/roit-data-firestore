@@ -20,17 +20,14 @@ delete(ids) {
                 // Verificar quais documentos estão arquivados antes de deletar
                 const archivedDocs = [];
                 if (archiveService.isEnabled()) {
-                    for (const id of ids) {
-                        const docRef = collection.doc(id);
-                        const doc = yield docRef.get();
-                        if (doc.exists) {
+                    const docRefs = ids.map(id => collection.doc(id));
+                    const docs = docRefs.length > 0 ? yield db.getAll(...docRefs) : [];
+                    for (let i = 0; i < docs.length; i++) {
+                        const doc = docs[i];
+                        if (doc && doc.exists) {
                             const data = doc.data();
-                            if (
-                                data 
-                                && archiveService.isDocumentArchived(data)
-                                && data.fbArchivePath
-                            ) {
-                                archivedDocs.push({ id, archivePath: data.fbArchivePath });
+                            if (data && archiveService.isDocumentArchived(data) && data.fbArchivePath) {
+                                archivedDocs.push({ id: ids[i], archivePath: data.fbArchivePath });
                             }
                         }
                     }
