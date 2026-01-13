@@ -25,18 +25,18 @@ export interface IArchivePlugin {
   isDocumentArchived(doc: Record<string, unknown>): boolean;
 
   /**
-   * Recupera documento arquivado do Storage
-   * 
-   * @param collection - Nome da collection
-   * @param docId - ID do documento
-   * @param projectId - ID do projeto (opcional)
-   * @returns Dados do documento ou null se não encontrado
+   * Recupera documento arquivado do Storage.
+   *
+   * IMPORTANTE (100% v3):
+   * - `archivePath` é obrigatório (normalmente o `fbArchivePath` do stub).
+   * - `docId` sozinho não identifica unicamente o objeto no Storage.
    */
-  getArchivedDocument(
-    collection: string,
-    docId: string,
-    projectId?: string
-  ): Promise<Record<string, unknown> | null>;
+  getArchivedDocument(params: {
+    collection: string;
+    docId: string;
+    archivePath: string;
+    projectId?: string;
+  }): Promise<Record<string, unknown> | null>;
 
   /**
    * Atualiza documento arquivado (merge dados do Storage com novos dados)
@@ -48,13 +48,14 @@ export interface IArchivePlugin {
    * @param projectId - ID do projeto (opcional)
    * @returns Resultado com dados mesclados
    */
-  updateArchivedDocument(
-    collection: string,
-    docId: string,
-    newData: Record<string, unknown>,
-    options?: { unarchive?: boolean },
-    projectId?: string
-  ): Promise<{
+  updateArchivedDocument(params: {
+    collection: string;
+    docId: string;
+    newData: Record<string, unknown>;
+    options?: { unarchive?: boolean };
+    projectId?: string;
+    archivePath?: string;
+  }): Promise<{
     result: { success: boolean; message?: string; error?: Error };
     mergedData?: Record<string, unknown>;
   }>;
@@ -67,11 +68,15 @@ export interface IArchivePlugin {
    * @param projectId - ID do projeto (opcional)
    * @returns Resultado da operação
    */
-  deleteArchivedDocument(
-    collection: string,
-    docId: string,
-    projectId?: string
-  ): Promise<{ success: boolean; message?: string; error?: Error }>;
+  deleteArchivedDocument(params: {
+    collection: string;
+    docId: string;
+    projectId?: string;
+    /**
+     * Path completo do objeto no Storage (v3), normalmente o `fbArchivePath` do stub.
+     */
+    archivePath?: string;
+  }): Promise<{ success: boolean; message?: string; error?: Error }>;
 
   /**
    * Invalida cache de documentos arquivados

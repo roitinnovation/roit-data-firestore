@@ -1,5 +1,5 @@
 import { ArchiveConfig } from '../config/ArchiveConfig';
-import { hasArchivePlugin, getArchivePlugin } from './index';
+import { hasArchivePlugin, getArchivePlugin, ARCHIVE_METADATA_FIELDS } from './index';
 
 /**
  * Interface para opções de atualização de documento arquivado
@@ -160,9 +160,24 @@ export class ArchiveService {
     }
 
     const docId = doc.id;
+    const archivePath =
+      typeof doc?.[ARCHIVE_METADATA_FIELDS.ARCHIVE_PATH] === 'string'
+        ? (doc[ARCHIVE_METADATA_FIELDS.ARCHIVE_PATH] as string)
+        : '';
+
+    if (!archivePath || archivePath.trim().length === 0) {
+      throw new Error(
+        `ArchiveService.getArchivedDocument: fbArchivePath é obrigatório no padrão v3. collection=${collectionName} docId=${docId}`
+      );
+    }
 
     // Delega para plugin (isEnabled já garante que existe)
-    return getArchivePlugin().getArchivedDocument(collectionName, docId, this.projectId);
+    return getArchivePlugin().getArchivedDocument({
+      collection: collectionName,
+      docId,
+      archivePath,
+      projectId: this.projectId,
+    });
   }
 
   /**
@@ -186,13 +201,13 @@ export class ArchiveService {
     }
 
     // Delega para plugin (isEnabled já garante que existe)
-    return getArchivePlugin().updateArchivedDocument(
-      collectionName,
+    return getArchivePlugin().updateArchivedDocument({
+      collection: collectionName,
       docId,
       newData,
       options,
-      this.projectId
-    );
+      projectId: this.projectId,
+    });
   }
 
   /**
@@ -203,13 +218,22 @@ export class ArchiveService {
    * @param docId - ID do documento
    * @returns Resultado da operação
    */
-  async deleteArchivedDocument(collectionName: string, docId: string): Promise<ArchiveOperationResult> {
+  async deleteArchivedDocument(
+    collectionName: string,
+    docId: string,
+    archivePath?: string
+  ): Promise<ArchiveOperationResult> {
     if (!this.isEnabled()) {
       return { success: false, message: 'Arquivamento desabilitado ou plugin não registrado' };
     }
 
     // Delega para plugin (isEnabled já garante que existe)
-    return getArchivePlugin().deleteArchivedDocument(collectionName, docId, this.projectId);
+    return getArchivePlugin().deleteArchivedDocument({
+      collection: collectionName,
+      docId,
+      projectId: this.projectId,
+      archivePath,
+    });
   }
 
   /**

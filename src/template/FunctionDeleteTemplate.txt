@@ -13,7 +13,7 @@ delete(ids) {
                 }
                 const db = global.instances.globalDbFile.FirestoreInstance.getInstance();
                 const environmentUtil = global.instances.environmentUtil;
-                const archiveService = global.instances.archiveService;
+                const archiveService = yield global.instances.archiveService;
                 const batch = db.batch();
                 const collection = db.collection('<COLLECTION_REPLACE>');
                 

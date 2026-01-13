@@ -29,7 +29,7 @@ createOrUpdate(items) {
                 });
                 
                 const docRefs = itemsWithIds.map(item => collection.doc(item.id));
-                const existingDocs = archiveService.isEnabled() 
+                const existingDocs = (archiveService.isEnabled() && docRefs.length > 0)
                     ? yield db.getAll(...docRefs)
                     : [];
                 

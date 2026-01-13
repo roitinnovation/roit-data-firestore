@@ -13,21 +13,23 @@ class NoOpArchivePlugin implements IArchivePlugin {
     return false;
   }
 
-  async getArchivedDocument(
-    _collection: string,
-    _docId: string,
-    _projectId?: string
-  ): Promise<Record<string, unknown> | null> {
+  async getArchivedDocument(_params: {
+    collection: string;
+    docId: string;
+    archivePath: string;
+    projectId?: string;
+  }): Promise<Record<string, unknown> | null> {
     return null;
   }
 
-  async updateArchivedDocument(
-    _collection: string,
-    _docId: string,
-    _newData: Record<string, unknown>,
-    _options?: { unarchive?: boolean },
-    _projectId?: string
-  ): Promise<{
+  async updateArchivedDocument(_params: {
+    collection: string;
+    docId: string;
+    newData: Record<string, unknown>;
+    options?: { unarchive?: boolean };
+    projectId?: string;
+    archivePath?: string;
+  }): Promise<{
     result: { success: boolean; message?: string };
     mergedData?: Record<string, unknown>;
   }> {
@@ -36,11 +38,12 @@ class NoOpArchivePlugin implements IArchivePlugin {
     };
   }
 
-  async deleteArchivedDocument(
-    _collection: string,
-    _docId: string,
-    _projectId?: string
-  ): Promise<{ success: boolean; message?: string }> {
+  async deleteArchivedDocument(_params: {
+    collection: string;
+    docId: string;
+    projectId?: string;
+    archivePath?: string;
+  }): Promise<{ success: boolean; message?: string }> {
     return { success: false, message: 'Archive plugin not registered' };
   }
 
@@ -66,7 +69,11 @@ class NoOpArchivePlugin implements IArchivePlugin {
  * // Em qualquer lugar da aplicação
  * const plugin = getArchivePlugin();
  * if (plugin.isEnabled()) {
- *   const data = await plugin.getArchivedDocument('orders', 'abc123');
+ *   const data = await plugin.getArchivedDocument({
+ *     collection: 'orders',
+ *     docId: 'abc123',
+ *     archivePath: 'gs://bucket/project/orders/YYYY/MM/DD/{ts}_abc123.json.gz',
+ *   });
  * }
  * ```
  */

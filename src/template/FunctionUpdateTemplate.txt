@@ -31,7 +31,7 @@ update(items) {
                 
                 // Buscar documentos existentes em lote (otimização)
                 const docRefs = items.map(item => collection.doc(item.id));
-                const existingDocs = archiveService.isEnabled() 
+                const existingDocs = (archiveService.isEnabled() && docRefs.length > 0)
                     ? yield db.getAll(...docRefs)
                     : [];
                 
