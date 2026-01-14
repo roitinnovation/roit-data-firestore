@@ -43,9 +43,8 @@ createOrUpdate(items) {
                     // VERIFICAÇÃO DE DOCUMENTO ARQUIVADO
                     if (archiveService.isEnabled() && existingDocs[i]?.exists) {
                         const currentData = existingDocs[i].data();
-                        
-                        if (currentData && archiveService.isDocumentArchived(currentData)) {
-                            const archivePath = currentData.fbArchivePath;
+                        const archivePath = archiveService.getArchivePath(currentData);
+                        if (currentData && archivePath) {
                             const updateResult = yield archiveService.updateArchivedDocument(
                                 '<COLLECTION_REPLACE>',
                                 item.id,
@@ -84,10 +83,7 @@ createOrUpdate(items) {
 
                     if (shouldUnarchive) {
                         const FieldValue = global.instances.FieldValue;
-                        const ARCHIVE_FIELDS = global.instances.ARCHIVE_FIELDS;
-                        itemData[ARCHIVE_FIELDS.ARCHIVED_AT] = FieldValue.delete();
-                        itemData[ARCHIVE_FIELDS.ARCHIVE_PATH] = FieldValue.delete();
-                        itemData[ARCHIVE_FIELDS.ARCHIVE_HASH] = FieldValue.delete();
+                        itemData['_rfa'] = FieldValue.delete();
                     }
 
                     batch.set(docRef, itemData, { merge: true });
