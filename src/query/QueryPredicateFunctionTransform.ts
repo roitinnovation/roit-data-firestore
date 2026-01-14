@@ -65,7 +65,8 @@ export class QueryPredicateFunctionTransform {
             aggregateCount: AggregateField.count,
             startTracer: startTracer,
             archiveService: ArchiveService.getInstance(),
-            ARCHIVE_FIELDS: ARCHIVE_METADATA_FIELDS
+            ARCHIVE_FIELDS: ARCHIVE_METADATA_FIELDS,
+            getArchivePath: ArchiveService.getArchivePath
         }
 
         if (!options?.collection) {

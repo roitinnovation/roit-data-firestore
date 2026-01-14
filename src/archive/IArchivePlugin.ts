@@ -1,37 +1,37 @@
 /**
- * Interface para plugins de arquivamento
+ * Interface for archive plugins
  * 
- * Esta interface define o contrato que plugins de archive devem implementar.
- * O plugin `firestore-archive` implementa esta interface.
+ * This interface defines the contract that archive plugins must implement.
+ * The `firestore-archive` plugin implements this interface.
  * 
  * @example
  * ```typescript
  * import { registerArchivePlugin } from '@roit/roit-data-firestore';
  * import { createArchivePlugin } from 'firestore-archive';
  * 
- * // Registrar o plugin no início da aplicação
+ * // Register the plugin at the beginning of the application
  * registerArchivePlugin(createArchivePlugin());
  * ```
  */
 export interface IArchivePlugin {
   /**
-   * Verifica se o arquivamento está habilitado
+   * Checks if the archive is enabled
    */
   isEnabled(): boolean;
 
   /**
-   * Verifica se um documento está arquivado (tem fbArchivedAt)
+   * Checks if a document is archived (has _rfa.archivedAt)
    */
   isDocumentArchived(doc: Record<string, unknown>): boolean;
 
   /**
-   * Recupera documento arquivado do Storage.
+   * Retrieves an archived document from Storage.
    *
-   * @param collection - Nome da collection
-   * @param docId - ID do documento
-   * @param archivePath - Path completo do objeto no Storage, normalmente o `fbArchivePath` do stub.
-   * @param projectId - ID do projeto (opcional)
-   * @returns Resultado da operação
+   * @param collection - Collection name
+   * @param docId - Document ID
+   * @param archivePath - Full object path in Storage, usually the stub's `_rfa.archivePath`.
+   * @param projectId - Project ID (optional)
+   * @returns Operation result
    */
   getArchivedDocument(params: {
     collection: string;
@@ -41,15 +41,15 @@ export interface IArchivePlugin {
   }): Promise<Record<string, unknown> | null>;
 
   /**
-   * Atualiza documento arquivado (merge dados do Storage com novos dados)
+   * Updates an archived document (merge Storage data with new data)
    * 
-   * @param collection - Nome da collection
-   * @param docId - ID do documento
-   * @param newData - Novos dados para mesclar
-   * @param options - Opções (unarchive: true para remover do Storage)
-   * @param projectId - ID do projeto (opcional)
-   * @param archivePath - Path completo do objeto no Storage, normalmente o `fbArchivePath` do stub. É obrigatório quando unarchive=true
-   * @returns Resultado com dados mesclados
+   * @param collection - Collection name
+   * @param docId - Document ID
+   * @param newData - New data to merge
+   * @param options - Options (unarchive: true to remove from Storage)
+   * @param projectId - Project ID (optional)
+   * @param archivePath - Full object path in Storage, usually the stub's `_rfa.archivePath`. Required when unarchive=true
+   * @returns Merged data
    */
   updateArchivedDocument(params: {
     collection: string;
@@ -64,12 +64,12 @@ export interface IArchivePlugin {
   }>;
 
   /**
-   * Deleta documento arquivado do Storage
+   * Deletes an archived document from Storage
    * 
-   * @param collection - Nome da collection
-   * @param docId - ID do documento
-   * @param projectId - ID do projeto (opcional)
-   * @returns Resultado da operação
+   * @param collection - Collection name
+   * @param docId - Document ID
+   * @param projectId - Project ID (optional)
+   * @returns Operation result
    */
   deleteArchivedDocument(params: {
     collection: string;
@@ -79,21 +79,43 @@ export interface IArchivePlugin {
   }): Promise<{ success: boolean; message?: string; error?: Error }>;
 
   /**
-   * Invalida cache de documentos arquivados
+   * Invalidates the cache of archived documents
    * 
-   * @param collection - Nome da collection (opcional)
-   * @param docId - ID do documento (opcional)
+   * @param collection - Collection name (optional)
+   * @param docId - Document ID (optional)
    */
   invalidateCache(collection?: string, docId?: string): Promise<void>;
 }
 
 /**
- * Campos de metadados de arquivamento no Firestore
+ * Archive marker key in Firestore (marker-only).
+ */
+export const ARCHIVE_MARKER_KEY = '_rfa' as const;
+
+export type ArchiveMarker = {
+  archivedAt?: string;
+  archiveHash?: string;
+  archivePath?: string;
+  restoredAt?: string;
+  version?: number | string;
+};
+
+export function getArchiveMarker(doc: Record<string, unknown> | null | undefined): ArchiveMarker | null {
+  if (!doc) return null;
+  const marker = (doc as Record<string, unknown>)[ARCHIVE_MARKER_KEY];
+  if (!marker || typeof marker !== 'object') return null;
+  return marker as ArchiveMarker;
+}
+
+/**
+ * Paths (dot-notation) for archive metadata in Firestore.
+ * Use these values in Firestore queries/updates; do not use for direct indexing in JS objects.
  */
 export const ARCHIVE_METADATA_FIELDS = {
-  ARCHIVED_AT: 'fbArchivedAt',
-  ARCHIVE_HASH: 'fbArchiveHash',
-  ARCHIVE_PATH: 'fbArchivePath',
-  RESTORED_AT: 'fbRestoredAt',
+  ARCHIVED_AT: `${ARCHIVE_MARKER_KEY}.archivedAt`,
+  ARCHIVE_HASH: `${ARCHIVE_MARKER_KEY}.archiveHash`,
+  ARCHIVE_PATH: `${ARCHIVE_MARKER_KEY}.archivePath`,
+  RESTORED_AT: `${ARCHIVE_MARKER_KEY}.restoredAt`,
+  VERSION: `${ARCHIVE_MARKER_KEY}.version`,
 } as const;
 

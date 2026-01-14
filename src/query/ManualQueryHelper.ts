@@ -8,7 +8,7 @@ import { RepositoryOptions } from '../model/RepositoryOptions';
 import { QueryCreatorConfig } from "./QueryCreatorConfig";
 import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
 import { ArchiveService } from '../archive/ArchiveService';
-// import { ArchiveConfig } from "../config/ArchiveConfig";
+import { ARCHIVE_MARKER_KEY } from '../archive';
 
 export class ManualQueryHelper {
 
@@ -29,12 +29,12 @@ export class ManualQueryHelper {
     }
 
     /**
-     * Processa documentos arquivados, recuperando seus dados completos do Cloud Storage
+     * Processes archived documents, retrieving their complete data from Cloud Storage
      */
     private static async processArchivedDocuments(docs: any[], collectionName: string): Promise<any[]> {
         const archiveService = await ArchiveService.getInstance();
 
-        // Verifica se o arquivamento está habilitado
+        // Checks if the archive is enabled
         if (!archiveService.isEnabled()) {
             return docs;
         }
@@ -50,16 +50,17 @@ export class ManualQueryHelper {
             }
 
             try {
-                // O ArchiveService agora gerencia o cache internamente baseado na configuração
+                // The ArchiveService now manages the cache internally based on the configuration
                 const archivedData = await archiveService.getArchivedDocument(collectionName, doc);
                 if (archivedData) {
-                    // Remove o flag de arquivamento e mescla os dados
-                    // const { fbArchivedAt, ...archivedDataWithoutFlag } = archivedData;
-                    return { ...doc, ...archivedData };
+                    // Merges the stub data with the archived data (the stub keeps _rfa)
+                    // Preserve the marker from stub to prevent archivedData from overwriting it
+                    const marker = doc?.[ARCHIVE_MARKER_KEY];
+                    return { ...doc, ...archivedData, [ARCHIVE_MARKER_KEY]: marker };
                 }
                 return doc;
             } catch (error) {
-                console.warn(`Erro ao recuperar documento arquivado ${doc.id}:`, error);
+                console.warn(`Error retrieving archived document ${doc.id}:`, error);
                 return doc;
             }
         });
