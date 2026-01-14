@@ -26,7 +26,7 @@ delete(ids) {
                         const doc = docs[i];
                         if (doc && doc.exists) {
                             const data = doc.data();
-                            const archivePath = archiveService.getArchivePath(data);
+                            const archivePath = global.instances.getArchivePath(data);
                             if (data && archivePath) {
                                 archivedDocs.push({ id: ids[i], archivePath });
                             }

@@ -19,7 +19,7 @@ updatePartial(id, item) {
                     
                     if (currentDoc.exists) {
                         const currentData = currentDoc.data();
-                        const archivePath = archiveService.getArchivePath(currentData);
+                        const archivePath = global.instances.getArchivePath(currentData);
 
                         if (currentData && archivePath) {
                             const updateResult = yield archiveService.updateArchivedDocument(

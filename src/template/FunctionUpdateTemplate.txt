@@ -45,7 +45,7 @@ update(items) {
                     // VERIFICAÇÃO DE DOCUMENTO ARQUIVADO
                     if (archiveService.isEnabled() && existingDocs[i]?.exists) {
                         const currentData = existingDocs[i].data();
-                        const archivePath = archiveService.getArchivePath(currentData);
+                        const archivePath = global.instances.getArchivePath(currentData);
 
                         if (currentData && archivePath) {
                             const updateResult = yield archiveService.updateArchivedDocument(
