@@ -8,6 +8,7 @@ import { RepositoryOptions } from '../model/RepositoryOptions';
 import { QueryCreatorConfig } from "./QueryCreatorConfig";
 import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
 import { ArchiveService } from '../archive/ArchiveService';
+import { ARCHIVE_MARKER_KEY } from '../archive';
 
 export class ManualQueryHelper {
 
@@ -53,7 +54,9 @@ export class ManualQueryHelper {
                 const archivedData = await archiveService.getArchivedDocument(collectionName, doc);
                 if (archivedData) {
                     // Merges the stub data with the archived data (the stub keeps _rfa)
-                    return { ...doc, ...archivedData };
+                    // Preserve the marker from stub to prevent archivedData from overwriting it
+                    const marker = doc?.[ARCHIVE_MARKER_KEY];
+                    return { ...doc, ...archivedData, [ARCHIVE_MARKER_KEY]: marker };
                 }
                 return doc;
             } catch (error) {
