@@ -26,8 +26,9 @@ delete(ids) {
                         const doc = docs[i];
                         if (doc && doc.exists) {
                             const data = doc.data();
-                            if (data && archiveService.isDocumentArchived(data) && data.fbArchivePath) {
-                                archivedDocs.push({ id: ids[i], archivePath: data.fbArchivePath });
+                            const archivePath = global.instances.getArchivePath(data);
+                            if (data && archivePath) {
+                                archivedDocs.push({ id: ids[i], archivePath });
                             }
                         }
                     }
