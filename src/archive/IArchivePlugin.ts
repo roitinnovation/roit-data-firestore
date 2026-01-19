@@ -20,7 +20,7 @@ export interface IArchivePlugin {
   isEnabled(): boolean;
 
   /**
-   * Checks if a document is archived (has _rfa.archivedAt)
+   * Checks if a document is archived
    */
   isDocumentArchived(doc: Record<string, unknown>): boolean;
 
@@ -29,8 +29,9 @@ export interface IArchivePlugin {
    *
    * @param collection - Collection name
    * @param docId - Document ID
-   * @param archivePath - Full object path in Storage, usually the stub's `_rfa.archivePath`.
+   * @param archivePath - Full object path in Storage
    * @param projectId - Project ID (optional)
+   * @param expectedHash - Expected hash from Firestore stub for integrity verification (optional)
    * @returns Operation result
    */
   getArchivedDocument(params: {
@@ -38,6 +39,7 @@ export interface IArchivePlugin {
     docId: string;
     archivePath: string;
     projectId?: string;
+    expectedHash?: string;
   }): Promise<Record<string, unknown> | null>;
 
   /**
@@ -48,7 +50,7 @@ export interface IArchivePlugin {
    * @param newData - New data to merge
    * @param options - Options (unarchive: true to remove from Storage)
    * @param projectId - Project ID (optional)
-   * @param archivePath - Full object path in Storage, usually the stub's `_rfa.archivePath`. Required when unarchive=true
+   * @param archivePath - Full object path in Storage. Required when unarchive=true
    * @returns Merged data
    */
   updateArchivedDocument(params: {
@@ -85,37 +87,15 @@ export interface IArchivePlugin {
    * @param docId - Document ID (optional)
    */
   invalidateCache(collection?: string, docId?: string): Promise<void>;
+
+  getArchiveHash(doc: Record<string, unknown> | null | undefined): string | undefined;
+  getArchivePath(doc: Record<string, unknown> | null | undefined): string | undefined;
+  isArchived(doc: Record<string, unknown> | null | undefined): boolean;
+  markerKey(): string | undefined;
+
+  /**
+   * Returns the current configuration (for debugging/inspection)
+   * Added in firestore-archive v1.1.0
+   */
+  getConfig?(): Record<string, unknown> | undefined;
 }
-
-/**
- * Archive marker key in Firestore (marker-only).
- */
-export const ARCHIVE_MARKER_KEY = '_rfa' as const;
-
-export type ArchiveMarker = {
-  archivedAt?: string;
-  archiveHash?: string;
-  archivePath?: string;
-  restoredAt?: string;
-  version?: number | string;
-};
-
-export function getArchiveMarker(doc: Record<string, unknown> | null | undefined): ArchiveMarker | null {
-  if (!doc) return null;
-  const marker = (doc as Record<string, unknown>)[ARCHIVE_MARKER_KEY];
-  if (!marker || typeof marker !== 'object') return null;
-  return marker as ArchiveMarker;
-}
-
-/**
- * Paths (dot-notation) for archive metadata in Firestore.
- * Use these values in Firestore queries/updates; do not use for direct indexing in JS objects.
- */
-export const ARCHIVE_METADATA_FIELDS = {
-  ARCHIVED_AT: `${ARCHIVE_MARKER_KEY}.archivedAt`,
-  ARCHIVE_HASH: `${ARCHIVE_MARKER_KEY}.archiveHash`,
-  ARCHIVE_PATH: `${ARCHIVE_MARKER_KEY}.archivePath`,
-  RESTORED_AT: `${ARCHIVE_MARKER_KEY}.restoredAt`,
-  VERSION: `${ARCHIVE_MARKER_KEY}.version`,
-} as const;
-

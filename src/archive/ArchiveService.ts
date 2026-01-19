@@ -1,5 +1,5 @@
 import { ArchiveConfig } from '../config/ArchiveConfig';
-import { hasArchivePlugin, getArchivePlugin, ARCHIVE_METADATA_FIELDS, ARCHIVE_MARKER_KEY, getArchiveMarker } from './index';
+import { hasArchivePlugin, getArchivePlugin } from './index';
 
 /**
  * Interface for options to update an archived document
@@ -84,12 +84,12 @@ export class ArchiveService {
 
     // Initialize the instance
     ArchiveService.isInitializing = true;
-    
+
     try {
       if (!ArchiveService.instance) {
         ArchiveService.instance = new ArchiveService();
       }
-      
+
       await ArchiveService.instance.initialize();
       return ArchiveService.instance;
     } finally {
@@ -104,7 +104,7 @@ export class ArchiveService {
 
     this.config = ArchiveConfig.getConfig();
     this.logger = new ArchiveLogger(this.config.debug);
-    
+
     // ProjectId of the Firestore being archived (used for paths in Storage)
     this.projectId = this.config.projectId;
     if (!this.projectId) {
@@ -138,7 +138,12 @@ export class ArchiveService {
    */
   isEnabled(): boolean {
     // Archive only works with registered plugin
-    return this.config.enabled && hasArchivePlugin();
+    return hasArchivePlugin() && getArchivePlugin().isEnabled();
+  }
+
+  static isEnabled(): boolean {
+    // Archive only works with registered plugin
+    return hasArchivePlugin() && getArchivePlugin().isEnabled();
   }
 
   /**
@@ -154,14 +159,27 @@ export class ArchiveService {
   /**
    * Returns the Cloud Storage path of the archived payload for a stub document.
    *
-   * Marker-only: reads from `_rfa.archivePath`.
    * Returns the trimmed string or undefined when missing/invalid.
    */
   static getArchivePath(documentData: any): string | undefined {
-    const marker = getArchiveMarker(documentData);
-    if (!marker || typeof marker.archivePath !== 'string') return undefined;
-    const trimmed = marker.archivePath.trim();
-    return trimmed.length > 0 ? trimmed : undefined;
+    if (!this.isEnabled()) {
+      return undefined;
+    }
+    return getArchivePlugin().getArchivePath(documentData);
+  }
+
+  static getArchiveHash(documentData: any): string | undefined {
+    if (!this.isEnabled()) {
+      return undefined;
+    }
+    return getArchivePlugin().getArchiveHash(documentData);
+  }
+
+  public static markerKey(): string | undefined {
+    if (!this.isEnabled()) {
+      return undefined;
+    }
+    return getArchivePlugin().markerKey();
   }
 
   /**
@@ -177,9 +195,12 @@ export class ArchiveService {
 
     if (!archivePath) {
       throw new Error(
-        `ArchiveService.getArchivedDocument: ${ARCHIVE_METADATA_FIELDS.ARCHIVE_PATH} is required. collection=${collectionName} docId=${docId}`
+        `ArchiveService.getArchivedDocument: ${getArchivePlugin().markerKey() || ''} archive path is required. collection=${collectionName} docId=${docId}`
       );
     }
+
+    // Extract hash from stub for integrity verification
+    const expectedHash = ArchiveService.getArchiveHash(doc);
 
     // Delegate to plugin (isEnabled already ensures it exists)
     return getArchivePlugin().getArchivedDocument({
@@ -187,6 +208,7 @@ export class ArchiveService {
       docId,
       archivePath,
       projectId: this.projectId,
+      expectedHash,
     });
   }
 
@@ -197,7 +219,7 @@ export class ArchiveService {
    * @param collectionName - Collection name
    * @param docId - Document ID
    * @param newData - New data to merge with the archived document
-   * @param archivePath - Full object path in Storage, usually the stub's `_rfa.archivePath`.
+   * @param archivePath - Full object path in Storage.
    * @param options - Update options
    * @returns Operation result and merged data
    */
@@ -214,7 +236,7 @@ export class ArchiveService {
 
     if (!archivePath || typeof archivePath !== 'string' || archivePath.trim().length === 0) {
       throw new Error(
-        `ArchiveService.updateArchivedDocument: ${ARCHIVE_METADATA_FIELDS.ARCHIVE_PATH} is required. collection=${collectionName} docId=${docId}`
+        `ArchiveService.updateArchivedDocument: ${getArchivePlugin().markerKey() || ''} archive path is required. collection=${collectionName} docId=${docId}`
       );
     }
 
@@ -235,7 +257,7 @@ export class ArchiveService {
    * 
    * @param collectionName - Collection name
    * @param docId - Document ID
-   * @param archivePath - Full object path in Storage, usually the stub's `_rfa.archivePath`.
+   * @param archivePath - Full object path in Storage.
    * @returns Operation result
    */
   async deleteArchivedDocument(
@@ -249,7 +271,7 @@ export class ArchiveService {
 
     if (!archivePath || typeof archivePath !== 'string' || archivePath.trim().length === 0) {
       throw new Error(
-        `ArchiveService.deleteArchivedDocument: ${ARCHIVE_METADATA_FIELDS.ARCHIVE_PATH} is required. collection=${collectionName} docId=${docId}`
+        `ArchiveService.deleteArchivedDocument: ${getArchivePlugin().markerKey() || ''} archive path is required. collection=${collectionName} docId=${docId}`
       );
     }
 
@@ -267,7 +289,7 @@ export class ArchiveService {
    * Combines the stub data (Firestore) with the archived data (Storage)
    * 
    * @param collectionName - Collection name
-   * @param stubData - Stub data in Firestore (includes _rfa)
+   * @param stubData - Stub data in Firestore (includes marker key)
    * @returns Complete merged data or null if not found
    */
   async getCompleteArchivedDocument(
@@ -279,15 +301,15 @@ export class ArchiveService {
     }
 
     const archivedData = await this.getArchivedDocument(collectionName, stubData);
-    
+
     if (!archivedData) {
       this.logger.warn(`Archived data not found for document: ${collectionName}/${stubData.id}`);
       return stubData; // Return stub if archived data is not found
     }
 
-    // Merge: storage data overwrites the stub, except the marker _rfa
-    const marker = stubData?.[ARCHIVE_MARKER_KEY];
-    return { ...stubData, ...archivedData, [ARCHIVE_MARKER_KEY]: marker };
+    // Merge: storage data overwrites the stub, except the marker key
+    const marker = stubData?.[getArchivePlugin().markerKey() || ''];
+    return { ...stubData, ...archivedData, [getArchivePlugin().markerKey() || '']: marker };
   }
 
   /**

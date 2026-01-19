@@ -14,11 +14,10 @@ import * as firestore from '../config/FirestoreInstance'
 import * as dateRef from '@roit/roit-date'
 import classValidator from 'class-validator'
 import * as uuid from 'uuid'
-import fs  from 'fs'
-import path  from 'path'
+import fs from 'fs'
+import path from 'path'
 import { startTracer } from '../tracer/Tracer';
 import { ArchiveService } from '../archive/ArchiveService';
-import { ARCHIVE_METADATA_FIELDS } from '../archive';
 
 const functionQueryTemplate = fs.readFileSync(path.resolve(__dirname, '../template/FunctionQueryTemplate.txt'), 'utf8')
 
@@ -65,8 +64,8 @@ export class QueryPredicateFunctionTransform {
             aggregateCount: AggregateField.count,
             startTracer: startTracer,
             archiveService: ArchiveService.getInstance(),
-            ARCHIVE_FIELDS: ARCHIVE_METADATA_FIELDS,
-            getArchivePath: ArchiveService.getArchivePath
+            getArchivePath: ArchiveService.getArchivePath,
+            markerKey: ArchiveService.markerKey,
         }
 
         if (!options?.collection) {
@@ -83,7 +82,7 @@ export class QueryPredicateFunctionTransform {
         this.schemaRegister.set(modelName, targetConstructorToSchema(instance))
 
         if (methodSignature in methodList) {
-            
+
             const func = methodList[methodSignature as keyof typeof methodList]
 
             let functionString = func.toString()
@@ -95,12 +94,12 @@ export class QueryPredicateFunctionTransform {
                 .replace("let validatorOptions", `let validatorOptions = ${options?.validatorOptions ? JSON.stringify(options?.validatorOptions) : undefined}`)
                 .replace("let repositoryClassName = ''", `let repositoryClassName = '${repositoryClassName}'`)
                 .replace("let methodSignature = ''", `let methodSignature = '${methodSignature}'`)
-                
-                if(options?.ttl) {
-                    functionString = functionString.replace("let ttlExpirationIn", `let ttlExpirationIn = ${options?.ttl.expirationIn}`)
-                    functionString = functionString.replace("let ttlUnit", `let ttlUnit = '${options?.ttl.unit}'`)
-                    functionString = functionString.replace("let ttlUpdate", `let ttlUpdate = ${options?.ttl.ttlUpdate}`)
-                }
+
+            if (options?.ttl) {
+                functionString = functionString.replace("let ttlExpirationIn", `let ttlExpirationIn = ${options?.ttl.expirationIn}`)
+                functionString = functionString.replace("let ttlUnit", `let ttlUnit = '${options?.ttl.unit}'`)
+                functionString = functionString.replace("let ttlUpdate", `let ttlUpdate = ${options?.ttl.ttlUpdate}`)
+            }
 
             functionString = this.removeLast(functionString, '});')
             return Function(`return ${functionString}`)()

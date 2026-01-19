@@ -50,6 +50,26 @@ class NoOpArchivePlugin implements IArchivePlugin {
   async invalidateCache(_collection?: string, _docId?: string): Promise<void> {
     // No-op
   }
+
+  getArchiveHash(_doc: Record<string, unknown>): string | undefined {
+    return undefined;
+  }
+
+  getArchivePath(_doc: Record<string, unknown>): string | undefined {
+    return undefined;
+  }
+
+  isArchived(_doc: Record<string, unknown>): boolean {
+    return false;
+  }
+
+  markerKey(): string | undefined {
+    return undefined;
+  }
+
+  getConfig(): Record<string, unknown> | undefined {
+    return undefined;
+  }
 }
 
 /**
