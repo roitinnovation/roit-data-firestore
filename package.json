@@ -25,7 +25,7 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "@google-cloud/firestore": "7.3.0",
+    "@google-cloud/firestore": "7.11.6",
     "@google-cloud/storage": "^7.7.0",
     "@roit/roit-date": "1.10.5",
     "class-validator": "0.14.1",
