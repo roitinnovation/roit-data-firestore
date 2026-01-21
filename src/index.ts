@@ -24,7 +24,6 @@ export { FirestoreInstance } from "./config/FirestoreInstance"
  */
 export {
   IArchivePlugin,
-  ARCHIVE_METADATA_FIELDS,
   registerArchivePlugin,
   getArchivePlugin,
   hasArchivePlugin,

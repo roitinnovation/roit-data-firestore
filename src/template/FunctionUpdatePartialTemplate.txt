@@ -48,9 +48,9 @@ updatePartial(id, item) {
                         updateTimestampAt
                     };
 
-                    if (shouldUnarchive) {
+                    if (shouldUnarchive && global.instances.markerKey()) {
                         const FieldValue = global.instances.FieldValue;
-                        itemData['_rfa'] = FieldValue.delete();
+                        itemData[global.instances.markerKey()] = FieldValue.delete();
                     }
 
                     yield document.set(itemData, { merge: true });

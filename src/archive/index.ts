@@ -1,9 +1,5 @@
 export {
-  IArchivePlugin,
-  ARCHIVE_METADATA_FIELDS,
-  ARCHIVE_MARKER_KEY,
-  ArchiveMarker,
-  getArchiveMarker,
+  IArchivePlugin
 } from './IArchivePlugin';
 export {
   registerArchivePlugin,

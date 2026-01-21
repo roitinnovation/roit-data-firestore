@@ -460,20 +460,6 @@ in data document there is create attribute ttlExpirationAt
 
 ## Archive Service
 
-Archive service is a service that allows you to archive data from firestore to a bucket in GCP.
+Archive service is a service that allows you to archive data from Firestore to a bucket in GCP.
 
-Example (using env.yaml):
-```
-firestore:
-    projectId: 'gcp-project-id'
-    archive:
-        enable: true
-        debug: false
-        bucketName: 'your-bucket-name'
-        cache:
-            enabled: true
-            redisUrl: 'redis://localhost:6379'
-            timeout: 2000
-            reconnectInSecondsAfterTimeout: 30
-            expiresInSeconds: 3600
-```
+For implementation details and configuration options, please refer to the `firestore-archive` (private) library documentation.

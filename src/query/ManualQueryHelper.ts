@@ -8,14 +8,13 @@ import { RepositoryOptions } from '../model/RepositoryOptions';
 import { QueryCreatorConfig } from "./QueryCreatorConfig";
 import { QueryPredicateFunctionTransform } from './QueryPredicateFunctionTransform';
 import { ArchiveService } from '../archive/ArchiveService';
-import { ARCHIVE_MARKER_KEY } from '../archive';
 
 export class ManualQueryHelper {
 
     static async executeQueryManual(className: string, config: Config, queryRef = false): Promise<any> {
         const result = await this.handleExecuteQueryManual(className, config, { showCount: false }, queryRef)
-        
-        if(queryRef) {
+
+        if (queryRef) {
             return result
         }
 
@@ -23,7 +22,7 @@ export class ManualQueryHelper {
 
         return data
     }
-    
+
     static async executeQueryManualPaginated(className: string, config: Config): Promise<QueryResult> {
         return this.handleExecuteQueryManual(className, config, { showCount: true })
     }
@@ -52,11 +51,12 @@ export class ManualQueryHelper {
             try {
                 // The ArchiveService now manages the cache internally based on the configuration
                 const archivedData = await archiveService.getArchivedDocument(collectionName, doc);
-                if (archivedData) {
-                    // Merges the stub data with the archived data (the stub keeps _rfa)
+                const markerKey = ArchiveService.markerKey()
+                if (archivedData && markerKey) {
+                    // Merges the stub data with the archived data
                     // Preserve the marker from stub to prevent archivedData from overwriting it
-                    const marker = doc?.[ARCHIVE_MARKER_KEY];
-                    return { ...doc, ...archivedData, [ARCHIVE_MARKER_KEY]: marker };
+                    const marker = doc?.[markerKey];
+                    return { ...doc, ...archivedData, [markerKey]: marker };
                 }
                 return doc;
             } catch (error) {
@@ -81,27 +81,27 @@ export class ManualQueryHelper {
             try {
                 const cacheResolver: CacheResolver = (global as any).instances.cacheResolver
                 const result = await cacheResolver.getCacheResult(className, 'any', JSON.stringify({ ...config, options }))
-        
+
                 if (result) {
                     return result
                 }
-        
+
                 const repositoryOptions: RepositoryOptions | undefined = QueryPredicateFunctionTransform.classConfig.get(className)
 
                 const traceQuery: Array<any> = []
                 const pushTraceQuery = (query: any) => {
                     traceQuery.push({ field: query.field, operator: query.operator, value: '?' })
                 }
-        
+
                 if (repositoryOptions) {
                     const firestoreInstance: Firestore = FirestoreInstance.getInstance()
-        
+
                     const collection = firestoreInstance.collection(repositoryOptions.collection)
-        
+
                     let queryList: Array<MQuery | MQuerySimple | MQueryOr>
-        
+
                     let queryExecute: any = collection
-        
+
                     if (config?.query && config?.query?.length > 0) {
 
                         queryList = config.query.map(query => {
@@ -123,30 +123,30 @@ export class ManualQueryHelper {
 
                                 if (orFilters.length > 0) {
                                     const orFilter = Filter.or(...orFilters);
-                                    
+
                                     if (queryExecute === collection) {
                                         queryExecute = collection.where(orFilter);
                                     } else {
                                         queryExecute = queryExecute.where(orFilter);
                                     }
                                 }
-                                
+
                             } else {
                                 const mQuery = Object.keys(queryItem).length === 1
                                     ? this.convertToMQuery(queryItem as unknown as MQuerySimple)
                                     : queryItem as MQuery;
-                                
+
                                 if (queryExecute === collection) {
                                     queryExecute = collection.where(mQuery.field, mQuery.operator as any, mQuery.value);
                                 } else {
                                     queryExecute = queryExecute.where(mQuery.field, mQuery.operator as any, mQuery.value);
                                 }
-                                
+
                                 pushTraceQuery(mQuery);
                             }
                         }
                     }
-        
+
                     if (config && config?.select) {
                         if (queryExecute) {
                             queryExecute = queryExecute.select(...config.select)
@@ -154,8 +154,8 @@ export class ManualQueryHelper {
                             queryExecute = collection.select(...config.select)
                         }
                     }
-        
-        
+
+
                     if (config && config?.orderBy) {
                         if (queryExecute) {
                             queryExecute = queryExecute.orderBy(config.orderBy.field, config.orderBy.direction)
@@ -163,31 +163,31 @@ export class ManualQueryHelper {
                             queryExecute = collection.orderBy(config.orderBy.field, config.orderBy.direction)
                         }
                     }
-        
+
                     if (queryExecute) {
                         let count: number | null = null;
-        
+
                         if (config?.paging) {
                             const { documentRef, totalItens } = await new QueryCreatorConfig().buildPaging(queryExecute, config.paging, options)
                             queryExecute = documentRef
                             count = totalItens
                         }
-        
-                        if(queryRef) {
+
+                        if (queryRef) {
                             return queryExecute
                         }
-        
+
                         const snapshot = await queryExecute.get()
-        
+
                         const data = this.getData(snapshot);
 
                         // PROCESSAR DOCUMENTOS ARQUIVADOS
                         const processedData = await this.processArchivedDocuments(data, repositoryOptions.collection);
-        
+
                         await cacheResolver.cacheResult(className, 'any', { data: processedData, count }, JSON.stringify({ ...config, options }))
-        
+
                         const firestoreReadAuditResolver: FirestoreReadAuditResolver = (global as any).instances.firestoreReadAuditResolver
-        
+
                         await firestoreReadAuditResolver.persistFirestoreRead({
                             collection: repositoryOptions.collection,
                             repositoryClassName: className,
@@ -201,20 +201,20 @@ export class ManualQueryHelper {
                             'firestore.operation.query': JSON.stringify(traceQuery),
                             'firestore.collection.name': repositoryOptions.collection,
                             'firestore.operation.size': data.length,
-                        })                         
-        
+                        })
+
                         return {
-                            data: processedData, 
+                            data: processedData,
                             totalItens: count
                         }
                     }
                 }
-        
-                return   {
-                    data: [], 
+
+                return {
+                    data: [],
                     totalItens: 0
                 }
-                
+
             } catch (error) {
                 span.setStatus({
                     code: 2,
